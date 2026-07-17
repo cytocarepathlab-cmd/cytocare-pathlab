@@ -1,0 +1,138 @@
+id,category,name,vial,price,reportingTime,sourcePage
+abo-rh-blood-grouping-001,Hematology,ABO & RH (BLOOD GROUPING),PURPLE - EDTA,100,Same day ( 6pm to 7pm),1
+bt-ct-002,Hematology,BT CT,,200,Same day ( 6pm to 7pm),1
+cbc-complete-blood-counts-003,Hematology,CBC - COMPLETE BLOOD COUNTS,PURPLE - EDTA,300,Same day ( 6pm to 7pm),1
+cbc-esr-hemograme-004,Hematology,CBC + ESR - HEMOGRAME,PURPLE - EDTA,400,Same day ( 6pm to 7pm),1
+pbs-peripheral-blood-smear-comments-005,Hematology,PBS - (Peripheral blood Smear) - Comments,PURPLE - EDTA,500,Same day ( 6pm to 7pm),1
+esr-006,Hematology,ESR,BLACK,100,Same day ( 6pm to 7pm),1
+hemoglobin-hb-007,Hematology,HEMOGLOBIN (HB%),PURPLE - EDTA,100,Same day ( 6pm to 7pm),1
+malaria-parasite-peripheral-smear-bsmp-008,Hematology,MALARIA PARASITE (PERIPHERAL SMEAR) - BSMP,PURPLE - EDTA,300,Same day ( 6pm to 7pm),1
+malaria-card-antigen-test-009,Hematology,MALARIA CARD ANTIGEN TEST,PURPLE - EDTA,300,Same day ( 6pm to 7pm),1
+sickling-test-010,Hematology,SICKLING TEST,PURPLE - EDTA,400,48 hrs,1
+platelet-count-011,Hematology,PLATELET COUNT,PURPLE - EDTA,200,Same day ( 6pm to 7pm),1
+prothrombin-time-with-inr-pt-inr-012,Hematology,PROTHROMBIN TIME WITH INR (PT INR),SKY,400,Same day ( 6pm to 7pm),1
+aptt-plasma-013,Hematology,"APTT, PLASMA",SKY,500,Same day ( 6pm to 7pm),1
+reticulocyte-count-014,Hematology,RETICULOCYTE COUNT,PURPLE - EDTA,200,Same day ( 6pm to 7pm),1
+aso-anti-streptolysin-o-quantitative-015,Serology,ASO (ANTI STREPTOLYSIN O) - QUANTITATIVE,RED - PLAIN,450,Same day ( 6pm to 7pm),1
+crp-c-reactive-protein-quantitative-016,Serology,CRP (C-REACTIVE PROTEIN) - QUANTITATIVE,RED - PLAIN,400,Same day ( 6pm to 7pm),1
+ra-factor-quantitative-017,Serology,RA FACTOR - QUANTITATIVE,RED - PLAIN,400,Same day ( 6pm to 7pm),1
+chikungunya-card-test-rapid-018,Serology,CHIKUNGUNYA CARD TEST (RAPID),RED - PLAIN,600,Same day ( 6pm to 7pm),1
+dengue-card-test-ns1-igg-igm-019,Serology,DENGUE CARD TEST (NS1 + IGG + IGM),RED - PLAIN,800,Same day ( 6pm to 7pm),1
+hiv-i-ii-card-test-020,Serology,HIV I & II Card Test,RED - PLAIN,400,Same day ( 6pm to 7pm),1
+hbsag-australia-antigen-card-test-021,Serology,HBSAG (AUSTRALIA ANTIGEN) Card Test,RED - PLAIN,400,Same day ( 6pm to 7pm),1
+hcv-hepatitis-c-antibody-card-test-022,Serology,HCV (HEPATITIS C ANTIBODY) Card Test,RED - PLAIN,450,Same day ( 6pm to 7pm),1
+hbsag-elisa-method-023,Serology,HBSAG - ELISA Method,RED - PLAIN,600,Same day ( 6pm to 7pm),1
+hiv-i-ii-elisa-method-024,Serology,HIV I & II - ELISA Method,RED - PLAIN,600,Same day ( 6pm to 7pm),1
+hcv-elisa-method-025,Serology,HCV - ELISA Method,RED - PLAIN,800,Same day ( 6pm to 7pm),1
+mantoux-tuberculin-test-026,Serology,MANTOUX (TUBERCULIN TEST),10 TU / 5 TU,200,48 to 72 Hrs,1
+microfilaria-card-test-027,Serology,MICROFILARIA CARD TEST,PURPLE / RED,600,Same day ( 6pm to 7pm),1
+microfilaria-antigen-elisa-method-028,Serology,MICROFILARIA ANTIGEN - ELISA Method,PURPLE / RED,1500,Same day ( 6pm to 7pm),1
+h-pylori-card-test-029,Serology,H PYLORI CARD TEST,RED - PLAIN,800,Same day ( 6pm to 7pm),1
+h-pylori-igg-iga-test-030,Serology,H PYLORI IGG IGA TEST,RED - PLAIN,2500,Same day ( 6pm to 7pm),1
+vdrl-test-031,Serology,VDRL TEST,RED - PLAIN,150,Same day ( 6pm to 7pm),1
+typhi-dot-igg-igm-032,Serology,TYPHI DOT IGG IGM,RED - PLAIN,500,Same day ( 6pm to 7pm),1
+widal-test-033,Serology,WIDAL TEST,RED - PLAIN,200,Same day ( 6pm to 7pm),1
+stool-routine-examination-034,Clinical Pathology,STOOL ROUTINE EXAMINATION,CONTAINER,300,Same day ( 6pm to 7pm),1
+stool-for-occult-blood-035,Clinical Pathology,STOOL FOR OCCULT BLOOD,CONTAINER,300,Same day ( 6pm to 7pm),1
+semen-analysis-colletion-at-lab-only-036,Clinical Pathology,SEMEN ANALYSIS - Colletion at Lab Only,CONTAINER,300,Same day ( 6pm to 7pm),1
+urine-bile-salt-pigment-037,Clinical Pathology,URINE BILE SALT / PIGMENT,CONTAINER,100,Same day ( 6pm to 7pm),1
+urine-for-ketone-bodies-038,Clinical Pathology,URINE FOR KETONE BODIES,CONTAINER,100,Same day ( 6pm to 7pm),1
+urine-pregnancy-test-039,Clinical Pathology,URINE PREGNANCY TEST,CONTAINER,150,Same day ( 6pm to 7pm),1
+urine-routine-examination-040,Clinical Pathology,URINE ROUTINE EXAMINATION,CONTAINER,100,Same day ( 6pm to 7pm),1
+urine-culture-susceptibility-041,Clinical Pathology,URINE CULTURE & SUSCEPTIBILITY,CONTAINER,300,48 Hrs,1
+urine-r-e-c-s-042,Clinical Pathology,URINE R/E & C/S,CONTAINER,400,48 Hrs,1
+urine-sugar-043,Clinical Pathology,URINE SUGAR,CONTAINER,100,Same day ( 6pm to 7pm),1
+urine-protein-24-hrs-044,Clinical Pathology,URINE PROTEIN 24 HRS,CONTAINER,600,Same day ( 6pm to 7pm),1
+urine-24-hrs-for-acid-fast-bacilli-045,Clinical Pathology,URINE 24 HRS FOR ACID FAST BACILLI,CONTAINER,600,Same day ( 6pm to 7pm),1
+urine-albumin-microalbumin-a-c-ratio-spot-046,Clinical Pathology,URINE ALBUMIN / MICROALBUMIN A/C RATIO-SPOT,CONTAINER,600,Same day ( 6pm to 7pm),1
+urine-protein-047,Clinical Pathology,URINE PROTEIN,CONTAINER,100,Same day ( 6pm to 7pm),1
+urine-protein-creatinine-ratio-spot-24-hrs-048,Clinical Pathology,URINE PROTEIN CREATININE RATIO (SPOT / 24 HRS),CONTAINER,600,Same day ( 6pm to 7pm),2
+ada-adenosine-deaminase-049,Biochemistry,ADA - Adenosine Deaminase,RED - PLAIN,900,Same day ( 6pm to 7pm),2
+alkaline-phosphatase-serum-050,Biochemistry,"ALKALINE PHOSPHATASE, SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+albumin-serum-051,Biochemistry,"ALBUMIN, SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+amylase-serum-052,Biochemistry,"AMYLASE, SERUM",RED - PLAIN,400,Same day ( 6pm to 7pm),2
+bilirubin-total-serum-053,Biochemistry,"BILIRUBIN (TOTAL), SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+bilirubin-total-direct-indirect-serum-054,Biochemistry,"BILIRUBIN (TOTAL, DIRECT & INDIRECT), SERUM",RED - PLAIN,300,Same day ( 6pm to 7pm),2
+calcium-serum-055,Biochemistry,"CALCIUM, SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+cholesterol-total-serum-056,Biochemistry,"CHOLESTEROL (TOTAL), SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+cpk-057,Biochemistry,CPK,RED - PLAIN,600,Same day ( 6pm to 7pm),2
+ck-mb-058,Biochemistry,CK MB,RED - PLAIN,800,Same day ( 6pm to 7pm),2
+creatinine-serum-059,Biochemistry,"CREATININE, SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+gamma-gt-ggt-060,Biochemistry,GAMMA GT (GGT),RED - PLAIN,200,Same day ( 6pm to 7pm),2
+sugar-glucose-fasting-061,Biochemistry,SUGAR GLUCOSE FASTING,GREY - Fluoride,50,Same day ( 6pm to 7pm),2
+sugar-glucose-pp-062,Biochemistry,SUGAR GLUCOSE PP,GREY - Fluoride,50,Same day ( 6pm to 7pm),2
+sugar-glucose-random-063,Biochemistry,SUGAR GLUCOSE RANDOM,GREY - Fluoride,50,Same day ( 6pm to 7pm),2
+egfr-glomerular-filtration-rate-064,Biochemistry,EGFR - GLOMERULAR FILTRATION RATE,RED - PLAIN,200,Same day ( 6pm to 7pm),2
+hba1c-glycosylated-heamoglobin-065,Biochemistry,HBA1C (GLYCOSYLATED HEAMOGLOBIN),PURPLE,500,Same day ( 6pm to 7pm),2
+ldh-066,Biochemistry,LDH,RED - PLAIN,400,Same day ( 6pm to 7pm),2
+kft-1-kidney-function-test-creat-urea-calcium-uric-acid-067,Biochemistry,"KFT-1 - KIDNEY FUNCTION TEST (creat, urea, calcium, uric acid)",RED,600,Same day ( 6pm to 7pm),2
+kft-2-kidney-function-test-with-electrolyte-urine-r-e-068,Biochemistry,KFT-2 - KIDNEY FUNCTION TEST with Electrolyte & Urine R/E,RED & Urine,900,Same day ( 6pm to 7pm),2
+liver-function-test-lft-069,Biochemistry,LIVER FUNCTION TEST (LFT),RED - PLAIN,600,Same day ( 6pm to 7pm),2
+lipid-profile-serum-070,Biochemistry,"LIPID PROFILE,SERUM",RED - PLAIN,600,Same day ( 6pm to 7pm),2
+lipase-serum-071,Biochemistry,"LIPASE, SERUM",RED - PLAIN,600,Same day ( 6pm to 7pm),2
+iron-serum-072,Biochemistry,"IRON, SERUM",RED - PLAIN,400,Same day ( 6pm to 7pm),2
+phosphorus-serum-073,Biochemistry,"PHOSPHORUS,SERUM",RED - PLAIN,200,Same day ( 6pm to 7pm),2
+total-protein-serum-074,Biochemistry,"TOTAL PROTEIN, SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+potassium-k-serum-075,Biochemistry,"POTASSIUM (K+), SERUM",RED - PLAIN,200,Same day ( 6pm to 7pm),2
+sodium-na-serum-076,Biochemistry,"SODIUM (NA+), SERUM",RED - PLAIN,200,Same day ( 6pm to 7pm),2
+electrolytes-serum-077,Biochemistry,"ELECTROLYTES, SERUM",RED - PLAIN,400,Same day ( 6pm to 7pm),2
+protein-albumin-globulin-a-g-ratio-078,Biochemistry,"PROTEIN, ALBUMIN, GLOBULIN A-G RATIO",RED - PLAIN,500,Same day ( 6pm to 7pm),2
+sgpt-serum-alt-079,Biochemistry,"SGPT, SERUM - ALT",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+sgot-serum-ast-080,Biochemistry,"SGOT, SERUM - AST",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+triglycerides-serum-081,Biochemistry,"TRIGLYCERIDES, SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+urea-082,Biochemistry,UREA,RED - PLAIN,150,Same day ( 6pm to 7pm),2
+uric-acid-serum-083,Biochemistry,"URIC ACID, SERUM",RED - PLAIN,150,Same day ( 6pm to 7pm),2
+t3-084,Hormones & Tumor Marker,T3,RED - PLAIN,150,Same day ( 6pm to 7pm),2
+t4-085,Hormones & Tumor Marker,T4,RED - PLAIN,150,Same day ( 6pm to 7pm),2
+tsh-086,Hormones & Tumor Marker,TSH,RED - PLAIN,300,Same day ( 6pm to 7pm),2
+t3-t4-tsh-thyroid-profile-087,Hormones & Tumor Marker,T3 T4 TSH (THYROID PROFILE),RED - PLAIN,500,Same day ( 6pm to 7pm),2
+ft3-ft4-tsh-088,Hormones & Tumor Marker,"FT3, FT4, TSH",RED - PLAIN,600,Same day ( 6pm to 7pm),2
+ft4-tsh-089,Hormones & Tumor Marker,"FT4, TSH",RED - PLAIN,500,Same day ( 6pm to 7pm),2
+ft3-free-t3-090,Hormones & Tumor Marker,FT3 - FREE T3,RED - PLAIN,250,Same day ( 6pm to 7pm),2
+ft4-free-t4-091,Hormones & Tumor Marker,FT4 - FREE T4,RED - PLAIN,250,Same day ( 6pm to 7pm),2
+beta-hcg-total-history-or-lmp-date-required-or-dr-s-prescription-092,Hormones & Tumor Marker,BETA HCG TOTAL - (History or LMP Date Required or Dr's Prescription),RED - PLAIN,800,Same day ( 6pm to 7:30pm),3
+lh-luteinising-hormone-093,Hormones & Tumor Marker,LH (LUTEINISING HORMONE),RED - PLAIN,450,Same day ( 6pm to 7pm),3
+fsh-follicular-stimulating-hormone-094,Hormones & Tumor Marker,FSH (FOLLICULAR STIMULATING HORMONE),RED - PLAIN,450,Same day ( 6pm to 7pm),3
+prl-prolactine-serum-history-required-095,Hormones & Tumor Marker,"PRL (PROLACTINE), SERUM ( History Required)",RED - PLAIN,500,Same day ( 6pm to 7pm),3
+psa-total-prostate-specific-antigen-096,Hormones & Tumor Marker,"PSA (TOTAL), PROSTATE SPECIFIC ANTIGEN",RED - PLAIN,700,Same day ( 6pm to 7:30pm),3
+vitamin-d-25-hydroxy-097,Hormones & Tumor Marker,VITAMIN D (25 HYDROXY),RED & PURPLE,1000,Same day ( 6pm to 7:30pm),3
+vitamin-b12-098,Hormones & Tumor Marker,VITAMIN B12,RED & PURPLE,800,Same day ( 6pm to 7:30pm),3
+total-ige-serum-099,Hormones & Tumor Marker,"TOTAL IGE, SERUM",RED - PLAIN,800,Same day ( 6pm to 7pm),3
+ferritin-serum-100,Hormones & Tumor Marker,"FERRITIN, SERUM",RED - PLAIN,800,Same day ( 6pm to 7:30pm),3
+pap-smear-101,Cytology,PAP SMEAR,CONTAINER,600,48 Hrs,3
+lbc-liquid-based-cytology-102,Cytology,LBC-Liquid Based Cytology,CONTAINER,1200,48 Hrs,3
+fluid-routine-examination-103,Cytology,FLUID ROUTINE EXAMINATION,CONTAINER,800,48 Hrs,3
+fluid-cytology-104,Cytology,FLUID CYTOLOGY,CONTAINER,800,48 Hrs,3
+fluid-analysis-with-ldh-afb-gram-ada-routine-and-cyto-105,Cytology,"FLUID ANALYSIS (with LDH, AFB, GRAM, ADA, ROUTINE AND CYTO)",CONTAINER,2800,48 Hrs,3
+bone-marrow-examination-106,Cytology,BONE MARROW EXAMINATION,In Lab only,1500,48 Hrs,3
+fnac-fine-needle-aspiration-cytology-non-gynaec-cytology-107,Cytology,"FNAC - FINE NEEDLE ASPIRATION CYTOLOGY, Non-Gynaec Cytology",In Lab only,1200,48 Hrs,3
+second-opinion-108,Cytology,SECOND OPINION,,500,,3
+culture-aerobic-susceptibility-pus-culture-109,Bacteriology,CULTURE AEROBIC & SUSCEPTIBILITY - PUS CULTURE,CONTAINER,600,48 Hrs,3
+stool-culture-110,Bacteriology,STOOL CULTURE,CONTAINER,600,48 Hrs,3
+pus-swab-culture-111,Bacteriology,PUS SWAB CULTURE,PUS,600,48 Hrs,3
+throat-swab-culture-112,Bacteriology,THROAT SWAB CULTURE,SWAB,600,48 Hrs,3
+conjunctival-swab-culture-113,Bacteriology,CONJUNCTIVAL SWAB CULTURE,SWAB,600,48 Hrs,3
+skin-slit-smear-lepra-smear-114,Bacteriology,SKIN SLIT SMEAR - LEPRA SMEAR,In Lab only,600,48 Hrs,3
+vaginal-swab-culsture-115,Bacteriology,VAGINAL SWAB CULSTURE,SWAB,600,48 Hrs,3
+afb-stain-sputum-for-afb-116,Bacteriology,AFB STAIN - SPUTUM FOR AFB,SPUTUM,200,Same day ( 6pm to 7pm),3
+afb-stain-sputum-for-afb-3-sample-117,Bacteriology,AFB STAIN - SPUTUM FOR AFB - 3 SAMPLE,SPUTUM,600,3 days,3
+grams-stain-118,Bacteriology,GRAMS STAIN,,200,Same day ( 6pm to 7pm),3
+blood-culture-119,Bacteriology,BLOOD CULTURE,Sodium Heparin,1200,3 Days or 7 to 8 days,3
+care-plus-advance-health-checkup-cbc-lft-lipid-profile-kft-sugar-f-r-hba1c-t3-t4-tsh-120,Cytocare Profiles & Panels,"CARE PLUS - Advance Health Checkup (CBC, LFT, LIPID PROFILE, KFT, SUGAR F/R, HBA1C, T3 T4 TSH)",RED PURPLE GREY,1500,Same day ( 6pm to 7:30pm),3
+fitness-plus-whole-body-checkup-cbc-esr-glucose-f-r-hba1c-kft-creatinine-urea-electrolyte-calcium-uric-acid-lft-lipid-profile-thyroid-profile-vit-d-vit-b12-total-protein-albumin-hbsag-ra-crp-urine-r-e-121,Cytocare Profiles & Panels,"Fitness Plus - Whole Body Checkup = (CBC, ESR, GLUCOSE F/R, HBA1C, KFT (CREATININE, UREA, ELECTROLYTE, CALCIUM, URIC ACID), LFT, LIPID PROFILE, THYROID PROFILE, VIT D, VIT B12, TOTAL PROTEIN, ALBUMIN HBSAG, RA, CRP, URINE R/E)","RED BLACK PURPLE GREY, URINE",3000,Same day ( 6pm to 7:30pm),3
+diabetics-monitor-fasting-pp-hba1c-urine-r-e-urine-microalbumin-albumin-creatinine-ratio-egfr-lipid-profile-creatinine-bun-uric-acid-tsh-122,Cytocare Profiles & Panels,"DIABETICS MONITOR = (FASTING,PP,HBA1C,URINE R/E, URINE MICROALBUMIN & ALBUMIN CREATININE RATIO, eGFR, LIPID PROFILE,CREATININE, BUN, URIC ACID, TSH)","PURPLE GREY RED, URINE",1500,Same day ( 6pm to 7:30pm),3
+diabetics-monitor-plus-fasting-pp-hba1c-urine-r-e-urine-microalbumin-albumin-creatinine-ratio-egfr-lipid-profile-creatinine-bun-uric-acid-tsh-homa-ir-insulin-resistance-index-123,Cytocare Profiles & Panels,"DIABETICS MONITOR PLUS = (FASTING,PP,HBA1C, URINE R/E, URINE MICROALBUMIN & ALBUMIN CREATININE RATIO, eGFR, LIPID PROFILE,CREATININE, BUN, URIC ACID, TSH, HOMA IR : INSULIN RESISTANCE INDEX)","PURPLE GREY RED, URINE",3700,Same day ( 6pm to 7:30pm),3
+iron-profile-iron-ferritin-total-iron-binding-capacity-tibc-transferrin-saturation-hemoglobin-hb-124,Cytocare Profiles & Panels,"IRON Profile = ( IRON, FERRITIN, Total Iron Binding Capacity (TIBC), Transferrin Saturation, Hemoglobin-HB )","RED, PURPLE",1600,Same day ( 6pm to 7:30pm),3
+fever-panel-cbc-esr-mp-widal-bilirubin-urine-r-e-125,Cytocare Profiles & Panels,"FEVER PANEL = (CBC, ESR, MP, WIDAL, BILIRUBIN, URINE R/E)","RED BLACK PURPLE, URINE",900,Same day ( 6pm to 7pm),3
+anaemia-profile-1-cbc-peripheral-blood-smear-pbs-retic-count-hscrp-iron-profile-126,Cytocare Profiles & Panels,"Anaemia Profile - 1 = ( CBC, Peripheral Blood Smear-PBS, Retic Count, hsCRP, IRON Profile )","RED, PURPLE",1600,Same day ( 6pm to 7:30pm),4
+anaemia-profile-2-cbc-peripheral-blood-smear-pbs-retic-count-hscrp-iron-profile-hb-electrophoresis-variant-patient-blood-transfusion-history-and-prescription-xerox-required-127,Cytocare Profiles & Panels,"Anaemia Profile - 2 = ( CBC, Peripheral Blood Smear-PBS, Retic Count, hsCRP, IRON Profile, HB Electrophoresis / Variant ) = ( Patient Blood Transfusion History and Prescription Xerox required )","RED, PURPLE",4000,Next day ( 6pm to 7:30pm),4
+arthrities-panel-1-cbc-esr-crp-uric-acid-aso-rf-calcium-128,Cytocare Profiles & Panels,"ARTHRITIES PANEL - 1 (CBC, ESR, CRP, URIC ACID, ASO, RF, CALCIUM)",RED BLACK PURPLE,1500,Same day ( 6pm to 7pm),4
+arthrities-panel-2-cbc-esr-crp-uric-acid-aso-rf-calcium-ana-anti-ccp-129,Cytocare Profiles & Panels,"ARTHRITIES PANEL - 2 (CBC, ESR, CRP, URIC ACID, ASO, RF, CALCIUM, ANA, ANTI CCP)",RED BLACK PURPLE,2500,Same day ( 6pm to 7:30pm),4
+anc-profile-antenatal-profile-cbc-abo-sugar-vdrl-hiv-hbsag-hcv-tsh-urine-r-e-130,Cytocare Profiles & Panels,"ANC PROFILE - ANTENATAL PROFILE = (CBC,ABO,SUGAR,VDRL,HIV,HBSAG,HCV,TSH,URINE R/E)","PURPLE GREY RED, URINE",1300,Same day,4
+double-dual-marker-131,Specialised Test Menu,DOUBLE / DUAL MARKER,RED - PLAIN,1800,Same day ( 6pm to 7:30pm),4
+pcod-panel-132,Specialised Test Menu,PCOD PANEL,RED - PLAIN,3400,Same day ( 6pm to 7:30pm),4
+torch-10-panel-133,Specialised Test Menu,TORCH 10 PANEL,RED - PLAIN,2500,Same day ( 6pm to 7:30pm),4
+ca-125-cancer-marker-serum-134,Specialised Test Menu,"CA 125, CANCER MARKER, SERUM",RED - PLAIN,1000,Same day ( 6pm to 7:30pm),4
+amh-anti-mullerian-hormone-serum-135,Specialised Test Menu,"AMH (ANTI MULLERIAN HORMONE), SERUM",RED - PLAIN,2000,Same day ( 6pm to 7:30pm),4
+hb-electrophrosis-hplc-136,Specialised Test Menu,HB ELECTROPHROSIS / HPLC,PURPLE - EDTA,1100,Next day ( 6pm to 7:30pm),4
+homa-ir-1st-trimester-fasting-sample-137,Specialised Test Menu,HOMA IR (1st Trimester) - Fasting Sample,"RED - PLAIN, GRAY",1200,Same day ( 6pm to 7:30pm),4
