@@ -148,6 +148,9 @@ export default function UnhealthyHabits({
   onAddToCart,
 }: UnhealthyHabitsProps) {
   const [activeCategory, setActiveCategory] = useState("Junk Food");
+  const [selectedPackage, setSelectedPackage] = useState<HabitPackage | null>(
+  null
+);
 
   const filteredPackages = habitPackages.filter(
     (item) => item.category === activeCategory
@@ -205,12 +208,13 @@ export default function UnhealthyHabits({
                 </h3>
 
                 <button
-                  type="button"
-                  className="mt-2 flex items-center gap-2 text-[14px] font-bold text-[#0b3e72]"
-                >
-                  View Details
-                  <FaChevronRight className="text-[11px]" />
-                </button>
+  type="button"
+  onClick={() => setSelectedPackage(item)}
+  className="mt-2 flex items-center gap-2 text-[14px] font-bold text-[#0b3e72] hover:text-[#e71935]"
+>
+  View Details
+  <FaChevronRight className="text-[11px]" />
+</button>
               </div>
 
               {/* REPORTS */}
@@ -280,7 +284,7 @@ export default function UnhealthyHabits({
           ))}
         </div>
 
-        {/* NOTE */}
+               {/* NOTE */}
         <div className="mt-5 rounded-2xl bg-[#f3f8ff] p-4">
           <p className="flex items-start gap-3 text-[15px] leading-7 text-slate-600">
             <FaVial className="mt-1 shrink-0 text-[#0754dc]" />
@@ -289,6 +293,114 @@ export default function UnhealthyHabits({
           </p>
         </div>
       </div>
+
+      {selectedPackage && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 px-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[28px] bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-extrabold uppercase tracking-wide text-[#0754dc]">
+                  {selectedPackage.category} Package
+                </p>
+
+                <h3 className="mt-2 text-2xl font-extrabold text-[#07142f]">
+                  {selectedPackage.title}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedPackage(null)}
+                className="rounded-full bg-slate-100 px-4 py-2 text-lg font-extrabold text-[#07142f] hover:bg-red-50 hover:text-[#e71935]"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl bg-[#f3f8ff] p-4">
+                <p className="text-sm font-bold text-slate-500">Reports In</p>
+                <p className="mt-1 text-xl font-extrabold text-[#07142f]">
+                  {selectedPackage.reportsIn}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-[#f3f8ff] p-4">
+                <p className="text-sm font-bold text-slate-500">Parameters</p>
+                <p className="mt-1 text-xl font-extrabold text-[#07142f]">
+                  {selectedPackage.parameters}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-slate-200 p-4">
+              <p className="mb-3 text-lg font-extrabold text-[#07142f]">
+                Tests Included
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                {selectedPackage.tests.split(",").map((test) => (
+                  <span
+                    key={test.trim()}
+                    className="rounded-full bg-[#eef5ff] px-4 py-2 text-sm font-bold text-[#0754dc]"
+                  >
+                    {test.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-[#fff7f7] p-5">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-3xl font-extrabold text-[#07142f]">
+                      ₹{selectedPackage.price}
+                    </p>
+
+                    <p className="text-lg font-semibold text-slate-400 line-through">
+                      ₹{selectedPackage.mrp}
+                    </p>
+
+                    <span className="rounded-full bg-[#00b894] px-3 py-1 text-xs font-extrabold text-white">
+                      {selectedPackage.discount}
+                    </span>
+                  </div>
+
+                  <p className="mt-2 text-sm font-semibold text-[#07142f]">
+                    Extra{" "}
+                    <span className="font-extrabold text-[#0754dc]">
+                      10% OFF
+                    </span>{" "}
+                    with Elite Membership
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAddToCart(selectedPackage.title);
+                    setSelectedPackage(null);
+                  }}
+                  className="flex items-center gap-2 rounded-xl bg-[#e71935] px-6 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#d9142e]"
+                >
+                  <FaCartPlus />
+                  Add To Cart
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-[#f3f8ff] p-4">
+              <p className="flex items-start gap-3 text-sm leading-6 text-slate-600">
+                <FaVial className="mt-1 shrink-0 text-[#0754dc]" />
+                This package is for preventive health awareness. Final test
+                selection may vary based on doctor advice, patient condition,
+                and lab availability.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

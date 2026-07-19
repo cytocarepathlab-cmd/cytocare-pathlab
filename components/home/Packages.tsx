@@ -39,7 +39,7 @@ export default function Packages({
     },
     {
       name: "Fitness Plus - Whole Body Checkup",
-      price: "₹3,000",
+      price: "₹2,999",
       tests: [
         "CBC",
         "ESR",
@@ -67,7 +67,7 @@ export default function Packages({
     },
     {
       name: "CARE PLUS - Advance Health Checkup",
-      price: "₹1,500",
+      price: "₹1,499",
       tests: [
         "CBC",
         "LFT",
@@ -83,7 +83,7 @@ export default function Packages({
     
     {
       name: "Diabetics Monitor",
-      price: "₹1,500",
+      price: "₹1,499",
       tests: [
         "Fasting Sugar",
         "HbA1c",
@@ -101,7 +101,7 @@ export default function Packages({
     },
     {
       name: "Diabetics Monitor Plus",
-      price: "₹3,700",
+      price: "₹3,699",
       tests: [
         "Fasting Sugar",
         "PP Sugar",
@@ -123,7 +123,7 @@ export default function Packages({
     },
     {
       name: "Iron Profile",
-      price: "₹1,600",
+      price: "₹1,599",
       tests: [
         "Iron",
         "Ferritin",
@@ -136,14 +136,14 @@ export default function Packages({
     },
     {
       name: "Fever Panel",
-      price: "₹900",
+      price: "₹899",
       tests: ["CBC", "ESR", "MP", "Widal", "Bilirubin", "Urine R/E"],
       reporting: "Same day",
       highlight: false,
     },
     {
       name: "Anaemia Profile - 1",
-      price: "₹1,600",
+      price: "₹1,599",
       tests: [
         "CBC",
         "Peripheral Blood Smear",
@@ -156,7 +156,7 @@ export default function Packages({
     },
     {
       name: "Anaemia Profile - 2",
-      price: "₹4,000",
+      price: "₹3,999",
       tests: [
         "CBC",
         "Peripheral Blood Smear",
@@ -170,14 +170,14 @@ export default function Packages({
     },
     {
       name: "Arthritis Panel - 1",
-      price: "₹1,500",
+      price: "₹1,499",
       tests: ["CBC", "ESR", "CRP", "Uric Acid", "ASO", "RF", "Calcium"],
       reporting: "Same day",
       highlight: false,
     },
     {
       name: "Arthritis Panel - 2",
-      price: "₹2,500",
+      price: "₹2,499",
       tests: [
         "CBC",
         "ESR",
@@ -194,7 +194,7 @@ export default function Packages({
     },
     {
       name: "ANC Profile - Antenatal Profile",
-      price: "₹1,300",
+      price: "₹1,299",
       tests: [
         "CBC",
         "ABO",

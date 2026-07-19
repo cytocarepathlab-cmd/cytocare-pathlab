@@ -14,7 +14,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "ABO & RH (BLOOD GROUPING)",
     "vial": "PURPLE - EDTA",
-    "price": 100,
+    "price": 99,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -23,7 +23,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "BT CT",
     "vial": "",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -32,7 +32,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "CBC - COMPLETE BLOOD COUNTS",
     "vial": "PURPLE - EDTA",
-    "price": 300,
+    "price": 299,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -41,7 +41,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "CBC + ESR - HEMOGRAME",
     "vial": "PURPLE - EDTA",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -50,7 +50,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "PBS - (Peripheral blood Smear) - Comments",
     "vial": "PURPLE - EDTA",
-    "price": 500,
+    "price": 499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -59,7 +59,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "ESR",
     "vial": "BLACK",
-    "price": 100,
+    "price": 99,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -68,7 +68,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "HEMOGLOBIN (HB%)",
     "vial": "PURPLE - EDTA",
-    "price": 100,
+    "price": 99,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -77,7 +77,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "MALARIA PARASITE (PERIPHERAL SMEAR) - BSMP",
     "vial": "PURPLE - EDTA",
-    "price": 300,
+    "price": 299,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -86,7 +86,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "MALARIA CARD ANTIGEN TEST",
     "vial": "PURPLE - EDTA",
-    "price": 300,
+    "price": 299,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -95,7 +95,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "SICKLING TEST",
     "vial": "PURPLE - EDTA",
-    "price": 400,
+    "price": 399,
     "reportingTime": "48 hrs",
     "sourcePage": 1
   },
@@ -104,7 +104,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "PLATELET COUNT",
     "vial": "PURPLE - EDTA",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -113,7 +113,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "PROTHROMBIN TIME WITH INR (PT INR)",
     "vial": "SKY",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -122,7 +122,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "APTT, PLASMA",
     "vial": "SKY",
-    "price": 500,
+    "price": 499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -131,7 +131,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hematology",
     "name": "RETICULOCYTE COUNT",
     "vial": "PURPLE - EDTA",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -140,7 +140,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "ASO (ANTI STREPTOLYSIN O) - QUANTITATIVE",
     "vial": "RED - PLAIN",
-    "price": 450,
+    "price": 449,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -149,7 +149,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "CRP (C-REACTIVE PROTEIN) - QUANTITATIVE",
     "vial": "RED - PLAIN",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -158,7 +158,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "RA FACTOR - QUANTITATIVE",
     "vial": "RED - PLAIN",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -167,7 +167,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "CHIKUNGUNYA CARD TEST (RAPID)",
     "vial": "RED - PLAIN",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -176,7 +176,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "DENGUE CARD TEST (NS1 + IGG + IGM)",
     "vial": "RED - PLAIN",
-    "price": 800,
+    "price": 799,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -185,7 +185,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "HIV I & II Card Test",
     "vial": "RED - PLAIN",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -194,7 +194,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "HBSAG (AUSTRALIA ANTIGEN) Card Test",
     "vial": "RED - PLAIN",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -203,7 +203,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "HCV (HEPATITIS C ANTIBODY) Card Test",
     "vial": "RED - PLAIN",
-    "price": 450,
+    "price": 449,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -212,7 +212,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "HBSAG - ELISA Method",
     "vial": "RED - PLAIN",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -221,7 +221,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "HIV I & II - ELISA Method",
     "vial": "RED - PLAIN",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -230,7 +230,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "HCV - ELISA Method",
     "vial": "RED - PLAIN",
-    "price": 800,
+    "price": 799,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -239,7 +239,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "MANTOUX (TUBERCULIN TEST)",
     "vial": "10 TU / 5 TU",
-    "price": 200,
+    "price": 199,
     "reportingTime": "48 to 72 Hrs",
     "sourcePage": 1
   },
@@ -248,7 +248,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "MICROFILARIA CARD TEST",
     "vial": "PURPLE / RED",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -257,7 +257,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "MICROFILARIA ANTIGEN - ELISA Method",
     "vial": "PURPLE / RED",
-    "price": 1500,
+    "price": 1499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -266,7 +266,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "H PYLORI CARD TEST",
     "vial": "RED - PLAIN",
-    "price": 800,
+    "price": 799,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -275,7 +275,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "H PYLORI IGG IGA TEST",
     "vial": "RED - PLAIN",
-    "price": 2500,
+    "price": 2499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -284,7 +284,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "VDRL TEST",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -293,7 +293,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "TYPHI DOT IGG IGM",
     "vial": "RED - PLAIN",
-    "price": 500,
+    "price": 499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -302,7 +302,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Serology",
     "name": "WIDAL TEST",
     "vial": "RED - PLAIN",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -311,7 +311,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "STOOL ROUTINE EXAMINATION",
     "vial": "CONTAINER",
-    "price": 300,
+    "price": 299,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -320,7 +320,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "STOOL FOR OCCULT BLOOD",
     "vial": "CONTAINER",
-    "price": 300,
+    "price": 299,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -329,7 +329,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "SEMEN ANALYSIS - Colletion at Lab Only",
     "vial": "CONTAINER",
-    "price": 300,
+    "price": 299,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -338,7 +338,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE BILE SALT / PIGMENT",
     "vial": "CONTAINER",
-    "price": 100,
+    "price": 99,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -347,7 +347,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE FOR KETONE BODIES",
     "vial": "CONTAINER",
-    "price": 100,
+    "price": 99,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -356,7 +356,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE PREGNANCY TEST",
     "vial": "CONTAINER",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -365,7 +365,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE ROUTINE EXAMINATION",
     "vial": "CONTAINER",
-    "price": 100,
+    "price": 99,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -374,7 +374,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE CULTURE & SUSCEPTIBILITY",
     "vial": "CONTAINER",
-    "price": 300,
+    "price": 299,
     "reportingTime": "48 Hrs",
     "sourcePage": 1
   },
@@ -383,7 +383,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE R/E & C/S",
     "vial": "CONTAINER",
-    "price": 400,
+    "price": 399,
     "reportingTime": "48 Hrs",
     "sourcePage": 1
   },
@@ -392,7 +392,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE SUGAR",
     "vial": "CONTAINER",
-    "price": 100,
+    "price": 99,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -401,7 +401,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE PROTEIN 24 HRS",
     "vial": "CONTAINER",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -410,7 +410,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE 24 HRS FOR ACID FAST BACILLI",
     "vial": "CONTAINER",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -419,7 +419,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE ALBUMIN / MICROALBUMIN A/C RATIO-SPOT",
     "vial": "CONTAINER",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -428,7 +428,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE PROTEIN",
     "vial": "CONTAINER",
-    "price": 100,
+    "price": 99,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 1
   },
@@ -437,7 +437,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Clinical Pathology",
     "name": "URINE PROTEIN CREATININE RATIO (SPOT / 24 HRS)",
     "vial": "CONTAINER",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -446,7 +446,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "ADA - Adenosine Deaminase",
     "vial": "RED - PLAIN",
-    "price": 900,
+    "price": 899,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -455,7 +455,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "ALKALINE PHOSPHATASE, SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -464,7 +464,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "ALBUMIN, SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -473,7 +473,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "AMYLASE, SERUM",
     "vial": "RED - PLAIN",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -482,7 +482,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "BILIRUBIN (TOTAL), SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -491,7 +491,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "BILIRUBIN (TOTAL, DIRECT & INDIRECT), SERUM",
     "vial": "RED - PLAIN",
-    "price": 300,
+    "price": 299,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -500,7 +500,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "CALCIUM, SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -509,7 +509,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "CHOLESTEROL (TOTAL), SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -518,7 +518,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "CPK",
     "vial": "RED - PLAIN",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -527,7 +527,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "CK MB",
     "vial": "RED - PLAIN",
-    "price": 800,
+    "price": 799,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -536,7 +536,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "CREATININE, SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -545,7 +545,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "GAMMA GT (GGT)",
     "vial": "RED - PLAIN",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -554,7 +554,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "SUGAR GLUCOSE FASTING",
     "vial": "GREY - Fluoride",
-    "price": 50,
+    "price": 49,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -563,7 +563,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "SUGAR GLUCOSE PP",
     "vial": "GREY - Fluoride",
-    "price": 50,
+    "price": 49,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -572,7 +572,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "SUGAR GLUCOSE RANDOM",
     "vial": "GREY - Fluoride",
-    "price": 50,
+    "price": 49,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -581,7 +581,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "EGFR - GLOMERULAR FILTRATION RATE",
     "vial": "RED - PLAIN",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -590,7 +590,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "HBA1C (GLYCOSYLATED HEAMOGLOBIN)",
     "vial": "PURPLE",
-    "price": 500,
+    "price": 499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -599,7 +599,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "LDH",
     "vial": "RED - PLAIN",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -608,7 +608,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "KFT-1 - KIDNEY FUNCTION TEST (creat, urea, calcium, uric acid)",
     "vial": "RED",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -617,7 +617,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "KFT-2 - KIDNEY FUNCTION TEST with Electrolyte & Urine R/E",
     "vial": "RED & Urine",
-    "price": 900,
+    "price": 899,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -626,7 +626,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "LIVER FUNCTION TEST (LFT)",
     "vial": "RED - PLAIN",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -635,7 +635,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "LIPID PROFILE,SERUM",
     "vial": "RED - PLAIN",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -644,7 +644,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "LIPASE, SERUM",
     "vial": "RED - PLAIN",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -653,7 +653,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "IRON, SERUM",
     "vial": "RED - PLAIN",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -662,7 +662,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "PHOSPHORUS,SERUM",
     "vial": "RED - PLAIN",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -671,7 +671,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "TOTAL PROTEIN, SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -680,7 +680,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "POTASSIUM (K+), SERUM",
     "vial": "RED - PLAIN",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -689,7 +689,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "SODIUM (NA+), SERUM",
     "vial": "RED - PLAIN",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -698,7 +698,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "ELECTROLYTES, SERUM",
     "vial": "RED - PLAIN",
-    "price": 400,
+    "price": 399,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -707,7 +707,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "PROTEIN, ALBUMIN, GLOBULIN A-G RATIO",
     "vial": "RED - PLAIN",
-    "price": 500,
+    "price": 499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -716,7 +716,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "SGPT, SERUM - ALT",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -725,7 +725,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "SGOT, SERUM - AST",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -734,7 +734,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "TRIGLYCERIDES, SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -743,7 +743,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "UREA",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -752,7 +752,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "URIC ACID, SERUM",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -761,7 +761,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "T3",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -770,7 +770,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "T4",
     "vial": "RED - PLAIN",
-    "price": 150,
+    "price": 149,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -779,7 +779,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "TSH",
     "vial": "RED - PLAIN",
-    "price": 300,
+    "price": 299,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -788,7 +788,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "T3 T4 TSH (THYROID PROFILE)",
     "vial": "RED - PLAIN",
-    "price": 500,
+    "price": 499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -797,7 +797,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "FT3, FT4, TSH",
     "vial": "RED - PLAIN",
-    "price": 600,
+    "price": 599,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -806,7 +806,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "FT4, TSH",
     "vial": "RED - PLAIN",
-    "price": 500,
+    "price": 499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -815,7 +815,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "FT3 - FREE T3",
     "vial": "RED - PLAIN",
-    "price": 250,
+    "price": 249,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -824,7 +824,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "FT4 - FREE T4",
     "vial": "RED - PLAIN",
-    "price": 250,
+    "price": 249,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },
@@ -833,7 +833,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "BETA HCG TOTAL - (History or LMP Date Required or Dr's Prescription)",
     "vial": "RED - PLAIN",
-    "price": 800,
+    "price": 799,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -842,7 +842,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "LH (LUTEINISING HORMONE)",
     "vial": "RED - PLAIN",
-    "price": 450,
+    "price": 449,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 3
   },
@@ -851,7 +851,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "FSH (FOLLICULAR STIMULATING HORMONE)",
     "vial": "RED - PLAIN",
-    "price": 450,
+    "price": 449,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 3
   },
@@ -860,7 +860,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "PRL (PROLACTINE), SERUM ( History Required)",
     "vial": "RED - PLAIN",
-    "price": 500,
+    "price": 499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 3
   },
@@ -869,7 +869,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "PSA (TOTAL), PROSTATE SPECIFIC ANTIGEN",
     "vial": "RED - PLAIN",
-    "price": 700,
+    "price": 699,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -878,7 +878,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "VITAMIN D (25 HYDROXY)",
     "vial": "RED & PURPLE",
-    "price": 1000,
+    "price": 999,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -887,7 +887,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "VITAMIN B12",
     "vial": "RED & PURPLE",
-    "price": 800,
+    "price": 799,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -896,7 +896,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "TOTAL IGE, SERUM",
     "vial": "RED - PLAIN",
-    "price": 800,
+    "price": 799,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 3
   },
@@ -905,7 +905,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Hormones & Tumor Marker",
     "name": "FERRITIN, SERUM",
     "vial": "RED - PLAIN",
-    "price": 800,
+    "price": 799,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -914,7 +914,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytology",
     "name": "PAP SMEAR",
     "vial": "CONTAINER",
-    "price": 600,
+    "price": 599,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -923,7 +923,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytology",
     "name": "LBC-Liquid Based Cytology",
     "vial": "CONTAINER",
-    "price": 1200,
+    "price": 1199,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -932,7 +932,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytology",
     "name": "FLUID ROUTINE EXAMINATION",
     "vial": "CONTAINER",
-    "price": 800,
+    "price": 799,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -941,7 +941,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytology",
     "name": "FLUID CYTOLOGY",
     "vial": "CONTAINER",
-    "price": 800,
+    "price": 799,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -950,7 +950,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytology",
     "name": "FLUID ANALYSIS (with LDH, AFB, GRAM, ADA, ROUTINE AND CYTO)",
     "vial": "CONTAINER",
-    "price": 2800,
+    "price": 2799,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -959,7 +959,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytology",
     "name": "BONE MARROW EXAMINATION",
     "vial": "In Lab only",
-    "price": 1500,
+    "price": 1499,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -968,7 +968,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytology",
     "name": "FNAC - FINE NEEDLE ASPIRATION CYTOLOGY, Non-Gynaec Cytology",
     "vial": "In Lab only",
-    "price": 1200,
+    "price": 1199,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -977,7 +977,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytology",
     "name": "SECOND OPINION",
     "vial": "",
-    "price": 500,
+    "price": 499,
     "reportingTime": "",
     "sourcePage": 3
   },
@@ -986,7 +986,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "CULTURE AEROBIC & SUSCEPTIBILITY - PUS CULTURE",
     "vial": "CONTAINER",
-    "price": 600,
+    "price": 599,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -995,7 +995,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "STOOL CULTURE",
     "vial": "CONTAINER",
-    "price": 600,
+    "price": 599,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -1004,7 +1004,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "PUS SWAB CULTURE",
     "vial": "PUS",
-    "price": 600,
+    "price": 599,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -1013,7 +1013,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "THROAT SWAB CULTURE",
     "vial": "SWAB",
-    "price": 600,
+    "price": 599,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -1022,7 +1022,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "CONJUNCTIVAL SWAB CULTURE",
     "vial": "SWAB",
-    "price": 600,
+    "price": 599,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -1031,7 +1031,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "SKIN SLIT SMEAR - LEPRA SMEAR",
     "vial": "In Lab only",
-    "price": 600,
+    "price": 599,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -1040,7 +1040,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "VAGINAL SWAB CULSTURE",
     "vial": "SWAB",
-    "price": 600,
+    "price": 599,
     "reportingTime": "48 Hrs",
     "sourcePage": 3
   },
@@ -1049,7 +1049,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "AFB STAIN - SPUTUM FOR AFB",
     "vial": "SPUTUM",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 3
   },
@@ -1058,7 +1058,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "AFB STAIN - SPUTUM FOR AFB - 3 SAMPLE",
     "vial": "SPUTUM",
-    "price": 600,
+    "price": 599,
     "reportingTime": "3 days",
     "sourcePage": 3
   },
@@ -1067,7 +1067,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "GRAMS STAIN",
     "vial": "",
-    "price": 200,
+    "price": 199,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 3
   },
@@ -1076,7 +1076,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Bacteriology",
     "name": "BLOOD CULTURE",
     "vial": "Sodium Heparin",
-    "price": 1200,
+    "price": 1199,
     "reportingTime": "3 Days or 7 to 8 days",
     "sourcePage": 3
   },
@@ -1085,7 +1085,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "CARE PLUS - Advance Health Checkup (CBC, LFT, LIPID PROFILE, KFT, SUGAR F/R, HBA1C, T3 T4 TSH)",
     "vial": "RED PURPLE GREY",
-    "price": 1500,
+    "price": 1499,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -1094,7 +1094,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "Fitness Plus - Whole Body Checkup = (CBC, ESR, GLUCOSE F/R, HBA1C, KFT (CREATININE, UREA, ELECTROLYTE, CALCIUM, URIC ACID), LFT, LIPID PROFILE, THYROID PROFILE, VIT D, VIT B12, TOTAL PROTEIN, ALBUMIN HBSAG, RA, CRP, URINE R/E)",
     "vial": "RED BLACK PURPLE GREY, URINE",
-    "price": 3000,
+    "price": 2999,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -1103,7 +1103,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "DIABETICS MONITOR = (FASTING,PP,HBA1C,URINE R/E, URINE MICROALBUMIN & ALBUMIN CREATININE RATIO, eGFR, LIPID PROFILE,CREATININE, BUN, URIC ACID, TSH)",
     "vial": "PURPLE GREY RED, URINE",
-    "price": 1500,
+    "price": 1499,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -1112,7 +1112,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "DIABETICS MONITOR PLUS = (FASTING,PP,HBA1C, URINE R/E, URINE MICROALBUMIN & ALBUMIN CREATININE RATIO, eGFR, LIPID PROFILE,CREATININE, BUN, URIC ACID, TSH, HOMA IR : INSULIN RESISTANCE INDEX)",
     "vial": "PURPLE GREY RED, URINE",
-    "price": 3700,
+    "price": 3699,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -1121,7 +1121,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "IRON Profile = ( IRON, FERRITIN, Total Iron Binding Capacity (TIBC), Transferrin Saturation, Hemoglobin-HB )",
     "vial": "RED, PURPLE",
-    "price": 1600,
+    "price": 1599,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 3
   },
@@ -1130,7 +1130,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "FEVER PANEL = (CBC, ESR, MP, WIDAL, BILIRUBIN, URINE R/E)",
     "vial": "RED BLACK PURPLE, URINE",
-    "price": 900,
+    "price": 899,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 3
   },
@@ -1139,7 +1139,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "Anaemia Profile - 1 = ( CBC, Peripheral Blood Smear-PBS, Retic Count, hsCRP, IRON Profile )",
     "vial": "RED, PURPLE",
-    "price": 1600,
+    "price": 1599,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1148,7 +1148,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "Anaemia Profile - 2 = ( CBC, Peripheral Blood Smear-PBS, Retic Count, hsCRP, IRON Profile, HB Electrophoresis / Variant ) = ( Patient Blood Transfusion History and Prescription Xerox required )",
     "vial": "RED, PURPLE",
-    "price": 4000,
+    "price": 3999,
     "reportingTime": "Next day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1157,7 +1157,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "ARTHRITIES PANEL - 1 (CBC, ESR, CRP, URIC ACID, ASO, RF, CALCIUM)",
     "vial": "RED BLACK PURPLE",
-    "price": 1500,
+    "price": 1499,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 4
   },
@@ -1166,7 +1166,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "ARTHRITIES PANEL - 2 (CBC, ESR, CRP, URIC ACID, ASO, RF, CALCIUM, ANA, ANTI CCP)",
     "vial": "RED BLACK PURPLE",
-    "price": 2500,
+    "price": 2499,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1175,7 +1175,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Cytocare Profiles & Panels",
     "name": "ANC PROFILE - ANTENATAL PROFILE = (CBC,ABO,SUGAR,VDRL,HIV,HBSAG,HCV,TSH,URINE R/E)",
     "vial": "PURPLE GREY RED, URINE",
-    "price": 1300,
+    "price": 1299,
     "reportingTime": "Same day",
     "sourcePage": 4
   },
@@ -1184,7 +1184,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Specialised Test Menu",
     "name": "DOUBLE / DUAL MARKER",
     "vial": "RED - PLAIN",
-    "price": 1800,
+    "price": 1799,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1193,7 +1193,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Specialised Test Menu",
     "name": "PCOD PANEL",
     "vial": "RED - PLAIN",
-    "price": 3400,
+    "price": 3399,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1202,7 +1202,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Specialised Test Menu",
     "name": "TORCH 10 PANEL",
     "vial": "RED - PLAIN",
-    "price": 2500,
+    "price": 2499,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1211,7 +1211,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Specialised Test Menu",
     "name": "CA 125, CANCER MARKER, SERUM",
     "vial": "RED - PLAIN",
-    "price": 1000,
+    "price": 999,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1220,7 +1220,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Specialised Test Menu",
     "name": "AMH (ANTI MULLERIAN HORMONE), SERUM",
     "vial": "RED - PLAIN",
-    "price": 2000,
+    "price": 1999,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1229,7 +1229,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Specialised Test Menu",
     "name": "HB ELECTROPHROSIS / HPLC",
     "vial": "PURPLE - EDTA",
-    "price": 1100,
+    "price": 1099,
     "reportingTime": "Next day ( 6pm to 7:30pm)",
     "sourcePage": 4
   },
@@ -1238,7 +1238,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Specialised Test Menu",
     "name": "HOMA IR (1st Trimester) - Fasting Sample",
     "vial": "RED - PLAIN, GRAY",
-    "price": 1200,
+    "price": 1199,
     "reportingTime": "Same day ( 6pm to 7:30pm)",
     "sourcePage": 4
   }
