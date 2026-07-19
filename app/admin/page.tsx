@@ -857,6 +857,19 @@ export default function AdminPage() {
           >
             Client Bookings
           </button>
+          <Link
+  href="/admin-software-upload"
+  className="rounded-2xl bg-white px-6 py-4 text-lg font-bold text-[#07142f] shadow-sm transition hover:bg-[#0754dc] hover:text-white"
+>
+  Software Excel Upload
+</Link>
+
+<Link
+  href="/admin-lab-booking"
+  className="rounded-2xl bg-white px-6 py-4 text-lg font-bold text-[#07142f] shadow-sm transition hover:bg-[#0754dc] hover:text-white"
+>
+  Lab Booking
+</Link>
         </div>
 
         {activeTab !== "overview" && (
