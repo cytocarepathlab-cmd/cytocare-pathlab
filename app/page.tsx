@@ -489,7 +489,12 @@ const updatedCart = [...cartItems, pendingTestName];
     window.location.href = "/tests";
   }}
   onHomeCollectionClick={() => {
-    window.location.href = "/tests";
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+
+    window.location.href = "/upload-prescription";
   }}
   onSearchSelect={(testName) => addToCart(testName)}
 />

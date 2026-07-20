@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   FaCalendarAlt,
-  FaHome,
+  FaFileMedical,
   FaSearch,
   FaShieldAlt,
   FaShoppingCart,
@@ -211,13 +211,13 @@ export default function Hero({
               </button>
 
               <button
-                type="button"
-                onClick={onHomeCollectionClick}
-                className="flex items-center justify-center gap-3 rounded-2xl bg-[#e71935] px-6 py-5 text-xl font-extrabold text-white shadow-md transition hover:bg-[#c9152d] xl:text-2xl"
-              >
-                <FaHome />
-                Home Collection
-              </button>
+  type="button"
+  onClick={onHomeCollectionClick}
+  className="flex items-center justify-center gap-3 rounded-2xl bg-[#e71935] px-6 py-5 text-xl font-extrabold text-white shadow-md transition hover:bg-[#c9152d] xl:text-2xl"
+>
+  <FaFileMedical />
+  Upload Prescription
+</button>
 
               <button
                 type="button"
