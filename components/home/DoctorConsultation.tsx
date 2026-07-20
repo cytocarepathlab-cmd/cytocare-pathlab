@@ -9,7 +9,6 @@ import {
   FaBrain,
   FaCalendarAlt,
   FaClinicMedical,
-  FaHeartbeat,
   FaLungs,
   FaMapMarkerAlt,
   FaPhoneAlt,
@@ -67,7 +66,8 @@ const specialties: { name: string; icon: IconType; packageText: string }[] = [
   {
     name: "Pulmonologist",
     icon: FaLungs,
-    packageText: "Breathing issues, cough, asthma, chest infection and lung-related concern",
+    packageText:
+      "Breathing issues, cough, asthma, chest infection and lung-related concern",
   },
   {
     name: "Psychatrist/Neuro",
@@ -98,15 +98,15 @@ const doctors: Doctor[] = [
     bookingNumber: "6203572424",
   },
   {
-  name: "Dr. Sanjay Jouhary",
-  specialty: "Urologist",
-  qualification: "MBBS, MS, DNB Urology",
-  experience: "9+ years",
-  clinic: "Sakchi, Jamshedpur",
-  timing: "All day 9 AM - 5 PM",
-  fee: "₹700",
-  bookingNumber: "6203572424",
-},
+    name: "Dr. Sanjay Jouhary",
+    specialty: "Urologist",
+    qualification: "MBBS, MS, DNB Urology",
+    experience: "9+ years",
+    clinic: "Sakchi, Jamshedpur",
+    timing: "All day 9 AM - 5 PM",
+    fee: "₹700",
+    bookingNumber: "6203572424",
+  },
   {
     name: "Dr. Rohit Kumar",
     specialty: "Orthopedic",
@@ -152,7 +152,8 @@ const doctors: Doctor[] = [
     specialty: "Pediatrician",
     qualification: "MBBS, MD Pediatrics, New Born & Child Specialist",
     experience: "10+ years",
-    clinic: "Road No.6, In Front Of SK Diagnostics, Jawaharnagar, Mango, Jamshedpur",
+    clinic:
+      "Road No.6, In Front Of SK Diagnostics, Jawaharnagar, Mango, Jamshedpur",
     timing: "Mon-Sat, 10:30 AM - 12 PM",
     fee: "₹400",
     bookingNumber: "6203572424",
@@ -168,15 +169,15 @@ const doctors: Doctor[] = [
     bookingNumber: "6203572424",
   },
   {
-  name: "Dr. Swati Singh",
-  specialty: "Psychatrist/Neuro",
-  qualification: "MBBS, DPM,  Neurology",
-  experience: "12+ years",
-  clinic: "Avni Mindcare, Tiwari Sadan, Baradwari, Jamshedpur",
-  timing: "Mon-Sat, 6 PM - 8 PM",
-  fee: "₹500",
-  bookingNumber: "6203572424",
-},
+    name: "Dr. Swati Singh",
+    specialty: "Psychatrist/Neuro",
+    qualification: "MBBS, DPM, Neurology",
+    experience: "12+ years",
+    clinic: "Avni Mindcare, Tiwari Sadan, Baradwari, Jamshedpur",
+    timing: "Mon-Sat, 6 PM - 8 PM",
+    fee: "₹500",
+    bookingNumber: "6203572424",
+  },
 ];
 
 export default function DoctorConsultation({
@@ -188,7 +189,9 @@ export default function DoctorConsultation({
   onRequireLogin: () => void;
   isEliteMember?: boolean;
 }) {
-  const [selectedSpecialty, setSelectedSpecialty] = useState("General Physician");
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(
+    null
+  );
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -204,25 +207,33 @@ export default function DoctorConsultation({
   });
 
   const today = new Date().toISOString().split("T")[0];
+
   function getNumericFee(fee: string) {
-  return Number(fee.replace(/[₹,\s]/g, "")) || 0;
-}
+    return Number(fee.replace(/[₹,\s]/g, "")) || 0;
+  }
 
-function getConsultationPricing(fee: string) {
-  const originalFee = getNumericFee(fee);
-  const eliteDiscount = isEliteMember ? 50 : 0;
-  const finalFee = Math.max(originalFee - eliteDiscount, 0);
+  function getConsultationPricing(fee: string) {
+    const originalFee = getNumericFee(fee);
+    const eliteDiscount = isEliteMember ? 50 : 0;
+    const finalFee = Math.max(originalFee - eliteDiscount, 0);
 
-  return {
-    originalFee,
-    eliteDiscount,
-    finalFee,
-  };
-}
+    return {
+      originalFee,
+      eliteDiscount,
+      finalFee,
+    };
+  }
 
-  const filteredDoctors = doctors.filter(
-    (doctor) => doctor.specialty === selectedSpecialty
-  );
+  function toggleSpecialty(specialtyName: string) {
+    setSelectedDoctor(null);
+
+    if (selectedSpecialty === specialtyName) {
+      setSelectedSpecialty(null);
+      return;
+    }
+
+    setSelectedSpecialty(specialtyName);
+  }
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -240,13 +251,12 @@ function getConsultationPricing(fee: string) {
       alert("Please enter a valid patient name.");
       return;
     }
-if (
-  !form.patient_email.includes("@") ||
-  !form.patient_email.includes(".")
-) {
-  alert("Please enter a valid email address.");
-  return;
-}
+
+    if (!form.patient_email.includes("@") || !form.patient_email.includes(".")) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
     if (form.phone.length !== 10) {
       alert("Phone number must be exactly 10 digits.");
       return;
@@ -254,9 +264,9 @@ if (
 
     setLoading(true);
 
-const pricing = getConsultationPricing(selectedDoctor.fee);
+    const pricing = getConsultationPricing(selectedDoctor.fee);
 
-const { error } = await supabase.from("doctor_consultations").insert([
+    const { error } = await supabase.from("doctor_consultations").insert([
       {
         patient_name: form.patient_name.trim(),
         patient_email: form.patient_email.trim(),
@@ -269,11 +279,11 @@ const { error } = await supabase.from("doctor_consultations").insert([
         doctor_timing: selectedDoctor.timing,
         doctor_booking_number: selectedDoctor.bookingNumber,
         consultation_fee: `₹${pricing.finalFee}`,
-original_consultation_fee: pricing.originalFee,
-elite_discount: pricing.eliteDiscount,
-final_consultation_fee: pricing.finalFee,
-elite_discount_applied: pricing.eliteDiscount > 0,
-health_concern: form.health_concern,
+        original_consultation_fee: pricing.originalFee,
+        elite_discount: pricing.eliteDiscount,
+        final_consultation_fee: pricing.finalFee,
+        elite_discount_applied: pricing.eliteDiscount > 0,
+        health_concern: form.health_concern,
         consultation_mode: form.consultation_mode,
         preferred_date: form.preferred_date,
         preferred_time: form.preferred_time,
@@ -339,7 +349,7 @@ Mode: ${form.consultation_mode}
   }
 
   return (
-    <section id="doctor-consultation" className="bg-white px-8 py-20">
+    <section id="doctor-consultation" className="bg-white px-4 py-16 md:px-8 md:py-20">
       <div className="mx-auto max-w-[1500px]">
         <div className="mb-10 text-center">
           <p className="font-bold text-[#0754dc]">DOCTOR CONSULTATION</p>
@@ -349,169 +359,188 @@ Mode: ${form.consultation_mode}
           </h2>
 
           <p className="mx-auto mt-4 max-w-3xl text-xl leading-8 text-slate-600">
-            Select a specialty, choose a doctor, and request consultation.
-            Our team will confirm your appointment details.
+            Select a specialty, choose a doctor, and request consultation. Our
+            team will confirm your appointment details.
           </p>
         </div>
 
-        {/* SPECIALTY CARDS */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {specialties.map((item) => {
             const Icon = item.icon;
             const active = selectedSpecialty === item.name;
+            const specialtyDoctors = doctors.filter(
+              (doctor) => doctor.specialty === item.name
+            );
 
             return (
-              <button
-                key={item.name}
-                type="button"
-                onClick={() => setSelectedSpecialty(item.name)}
-                className={`rounded-3xl p-6 text-left shadow-md transition hover:-translate-y-1 hover:shadow-xl ${
-                  active
-                    ? "bg-[#0754dc] text-white"
-                    : "bg-[#f5f9ff] text-[#07142f]"
-                }`}
-              >
-                <div
-                  className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl ${
-                    active ? "bg-white/20 text-white" : "bg-white text-[#0754dc]"
+              <div key={item.name} className="contents">
+                <button
+                  type="button"
+                  onClick={() => toggleSpecialty(item.name)}
+                  className={`rounded-3xl p-6 text-left shadow-md transition hover:-translate-y-1 hover:shadow-xl ${
+                    active
+                      ? "bg-[#0754dc] text-white"
+                      : "bg-[#f5f9ff] text-[#07142f]"
                   }`}
                 >
-                  <Icon />
-                </div>
+                  <div
+                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl ${
+                      active
+                        ? "bg-white/20 text-white"
+                        : "bg-white text-[#0754dc]"
+                    }`}
+                  >
+                    <Icon />
+                  </div>
 
-                <h3 className="mt-5 text-2xl font-extrabold">{item.name}</h3>
+                  <h3 className="mt-5 text-2xl font-extrabold">
+                    {item.name}
+                  </h3>
 
-                <p
-                  className={`mt-3 leading-7 ${
-                    active ? "text-blue-100" : "text-slate-600"
-                  }`}
-                >
-                  {item.packageText}
-                </p>
-              </button>
+                  <p
+                    className={`mt-3 leading-7 ${
+                      active ? "text-blue-100" : "text-slate-600"
+                    }`}
+                  >
+                    {item.packageText}
+                  </p>
+
+                  <p
+                    className={`mt-4 text-sm font-bold ${
+                      active ? "text-blue-100" : "text-[#0754dc]"
+                    }`}
+                  >
+                    {active ? "Tap again to hide doctors" : "Tap to view doctors"}
+                  </p>
+                </button>
+
+                {active && (
+                  <div className="rounded-[28px] bg-[#f5f9ff] p-5 shadow-lg sm:col-span-2 lg:col-span-4 lg:p-7">
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="font-bold text-[#0754dc]">
+                          AVAILABLE DOCTORS
+                        </p>
+
+                        <h3 className="mt-2 text-2xl font-extrabold text-[#07142f] md:text-3xl">
+                          {item.name}
+                        </h3>
+                      </div>
+
+                      <a
+                        href={`https://wa.me/${siteConfig.whatsapp}`}
+                        target="_blank"
+                        className="flex items-center gap-3 rounded-xl bg-[#05a832] px-5 py-3 font-bold text-white"
+                      >
+                        <FaWhatsapp />
+                        Ask on WhatsApp
+                      </a>
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                      {specialtyDoctors.map((doctor) => (
+                        <div
+                          key={doctor.name}
+                          className="rounded-3xl bg-white p-6 shadow-md"
+                        >
+                          <div className="flex items-start gap-5">
+                            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-[#f5f9ff] text-3xl text-[#0754dc] shadow-sm">
+                              <FaUserMd />
+                            </div>
+
+                            <div>
+                              <h4 className="text-2xl font-extrabold text-[#07142f]">
+                                {doctor.name}
+                              </h4>
+
+                              <p className="mt-1 font-semibold text-[#e71935]">
+                                {doctor.specialty}
+                              </p>
+
+                              <p className="mt-1 text-slate-600">
+                                {doctor.qualification}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-6 space-y-3 text-slate-700">
+                            <p className="flex items-start gap-3">
+                              <FaClinicMedical className="mt-1 shrink-0 text-[#0754dc]" />
+                              <span>{doctor.experience} experience</span>
+                            </p>
+
+                            <p className="flex items-start gap-3">
+                              <FaMapMarkerAlt className="mt-1 shrink-0 text-[#e71935]" />
+                              <span>{doctor.clinic}</span>
+                            </p>
+
+                            <p className="flex items-start gap-3">
+                              <FaCalendarAlt className="mt-1 shrink-0 text-[#0754dc]" />
+                              <span>{doctor.timing}</span>
+                            </p>
+
+                            <p className="flex items-start gap-3">
+                              <FaPhoneAlt className="mt-1 shrink-0 text-[#05a832]" />
+                              <span>Appointment: {doctor.bookingNumber}</span>
+                            </p>
+
+                            {(() => {
+                              const pricing = getConsultationPricing(doctor.fee);
+
+                              return (
+                                <div className="rounded-2xl bg-[#f5f9ff] p-4">
+                                  <p className="flex items-center gap-3 font-bold text-[#07142f]">
+                                    <FaRupeeSign className="text-[#0754dc]" />
+                                    Consultation Fee: ₹{pricing.finalFee}
+                                  </p>
+
+                                  {pricing.eliteDiscount > 0 && (
+                                    <div className="mt-2">
+                                      <p className="text-sm font-semibold text-slate-500 line-through">
+                                        Original Fee: ₹{pricing.originalFee}
+                                      </p>
+
+                                      <p className="text-sm font-bold text-[#05a832]">
+                                        Elite Discount Applied: -₹
+                                        {pricing.eliteDiscount}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!userEmail) {
+                                onRequireLogin();
+                                return;
+                              }
+
+                              setForm((prev) => ({
+                                ...prev,
+                                patient_email: userEmail,
+                              }));
+
+                              setSelectedDoctor(doctor);
+                            }}
+                            className="mt-7 w-full rounded-xl bg-[#0754dc] py-4 text-lg font-bold text-white"
+                          >
+                            Request Consultation
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
-
-        {/* DOCTOR LIST */}
-        <div className="mt-14">
-          <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="font-bold text-[#0754dc]">AVAILABLE DOCTORS</p>
-              <h3 className="mt-2 text-3xl font-extrabold text-[#07142f]">
-                {selectedSpecialty}
-              </h3>
-            </div>
-
-            <a
-              href={`https://wa.me/${siteConfig.whatsapp}`}
-              target="_blank"
-              className="flex items-center gap-3 rounded-xl bg-[#05a832] px-6 py-4 font-bold text-white"
-            >
-              <FaWhatsapp />
-              Ask on WhatsApp
-            </a>
-          </div>
-
-          <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
-            {filteredDoctors.map((doctor) => (
-              <div
-                key={doctor.name}
-                className="rounded-3xl bg-[#f5f9ff] p-7 shadow-lg"
-              >
-                <div className="flex items-start gap-5">
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-4xl text-[#0754dc] shadow-sm">
-                    <FaUserMd />
-                  </div>
-
-                  <div>
-                    <h4 className="text-2xl font-extrabold text-[#07142f]">
-                      {doctor.name}
-                    </h4>
-
-                    <p className="mt-1 font-semibold text-[#e71935]">
-                      {doctor.specialty}
-                    </p>
-
-                    <p className="mt-1 text-slate-600">
-                      {doctor.qualification}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-3 text-slate-700">
-                  <p className="flex items-center gap-3">
-                    <FaClinicMedical className="text-[#0754dc]" />
-                    {doctor.experience} experience
-                  </p>
-
-                  <p className="flex items-center gap-3">
-                    <FaMapMarkerAlt className="text-[#e71935]" />
-                    {doctor.clinic}
-                  </p>
-
-                  <p className="flex items-center gap-3">
-                    <FaCalendarAlt className="text-[#0754dc]" />
-                    {doctor.timing}
-                  </p>
-
-                  <p className="flex items-center gap-3">
-                    <FaPhoneAlt className="text-[#05a832]" />
-                    Appointment: {doctor.bookingNumber}
-                  </p>
-
-                  {(() => {
-  const pricing = getConsultationPricing(doctor.fee);
-
-  return (
-    <div className="rounded-2xl bg-white p-4">
-      <p className="flex items-center gap-3 font-bold text-[#07142f]">
-        <FaRupeeSign className="text-[#0754dc]" />
-        Consultation Fee: ₹{pricing.finalFee}
-      </p>
-
-      {pricing.eliteDiscount > 0 && (
-        <div className="mt-2">
-          <p className="text-sm font-semibold text-slate-500 line-through">
-            Original Fee: ₹{pricing.originalFee}
-          </p>
-
-          <p className="text-sm font-bold text-[#05a832]">
-            Elite Discount Applied: -₹{pricing.eliteDiscount}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-})()}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-  if (!userEmail) {
-    onRequireLogin();
-    return;
-  }
-
-  setForm((prev) => ({
-    ...prev,
-    patient_email: userEmail,
-  }));
-
-  setSelectedDoctor(doctor);
-}}
-                  className="mt-7 w-full rounded-xl bg-[#0754dc] py-4 text-lg font-bold text-white"
-                >
-                  Request Consultation
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* CONSULTATION MODAL */}
       {selectedDoctor && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
           <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-8 shadow-2xl">
@@ -531,6 +560,7 @@ Mode: ${form.consultation_mode}
               </div>
 
               <button
+                type="button"
                 onClick={() => setSelectedDoctor(null)}
                 className="rounded-full bg-slate-100 p-3 text-slate-600 hover:bg-slate-200"
               >
@@ -542,33 +572,36 @@ Mode: ${form.consultation_mode}
               <p>
                 <b>Clinic:</b> {selectedDoctor.clinic}
               </p>
+
               <p className="mt-2">
                 <b>Timing:</b> {selectedDoctor.timing}
               </p>
+
               {(() => {
-  const pricing = getConsultationPricing(selectedDoctor.fee);
+                const pricing = getConsultationPricing(selectedDoctor.fee);
 
-  return (
-    <div className="mt-4 rounded-2xl bg-white p-4">
-      <p className="flex items-center justify-between">
-        <b>Original Fee:</b>
-        <span>₹{pricing.originalFee}</span>
-      </p>
+                return (
+                  <div className="mt-4 rounded-2xl bg-white p-4">
+                    <p className="flex items-center justify-between">
+                      <b>Original Fee:</b>
+                      <span>₹{pricing.originalFee}</span>
+                    </p>
 
-      {pricing.eliteDiscount > 0 && (
-        <p className="mt-2 flex items-center justify-between text-[#05a832]">
-          <b>Elite Discount:</b>
-          <span>-₹{pricing.eliteDiscount}</span>
-        </p>
-      )}
+                    {pricing.eliteDiscount > 0 && (
+                      <p className="mt-2 flex items-center justify-between text-[#05a832]">
+                        <b>Elite Discount:</b>
+                        <span>-₹{pricing.eliteDiscount}</span>
+                      </p>
+                    )}
 
-      <p className="mt-2 flex items-center justify-between border-t pt-2 text-lg font-extrabold text-[#0754dc]">
-        <span>Final Payable:</span>
-        <span>₹{pricing.finalFee}</span>
-      </p>
-    </div>
-  );
-})()}
+                    <p className="mt-2 flex items-center justify-between border-t pt-2 text-lg font-extrabold text-[#0754dc]">
+                      <span>Final Payable:</span>
+                      <span>₹{pricing.finalFee}</span>
+                    </p>
+                  </div>
+                );
+              })()}
+
               <p className="mt-2">
                 <b>Appointment Number:</b> {selectedDoctor.bookingNumber}
               </p>
@@ -577,22 +610,20 @@ Mode: ${form.consultation_mode}
             <form onSubmit={submitConsultation} className="mt-6 space-y-4">
               <input
                 value={form.patient_name}
-            
                 onChange={(e) => updateField("patient_name", e.target.value)}
                 placeholder="Patient Name"
                 className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
                 required
               />
+
               <input
-  type="email"
-  value={form.patient_email}
-  
-  onChange={(e) => updateField("patient_email", e.target.value)}
-  placeholder="Email Address"
-  className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
-  required
-/>
-              
+                type="email"
+                value={form.patient_email}
+                onChange={(e) => updateField("patient_email", e.target.value)}
+                placeholder="Email Address"
+                className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
+                required
+              />
 
               <input
                 value={form.phone}
@@ -663,6 +694,7 @@ Mode: ${form.consultation_mode}
               </div>
 
               <button
+                type="submit"
                 disabled={loading}
                 className="w-full rounded-xl bg-[#0754dc] py-4 text-xl font-bold text-white hover:bg-[#0647c9] disabled:opacity-60"
               >
