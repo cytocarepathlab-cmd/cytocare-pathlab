@@ -196,15 +196,15 @@ export default function DoctorConsultation({
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    patient_name: "",
-    patient_email: "",
-    phone: "",
-    age: "",
-    health_concern: "",
-    consultation_mode: "Clinic Visit",
-    preferred_date: "",
-    preferred_time: "",
-  });
+  patient_name: "",
+  patient_email: "",
+  phone: "",
+  age: "",
+  health_concern: "",
+  consultation_mode: "Clinic Visit",
+  preferred_date: "",
+  preferred_time: "Timing will be shared through WhatsApp",
+});
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -321,8 +321,8 @@ Phone: ${form.phone}
 Age: ${form.age}
 Concern: ${form.health_concern}
 Preferred Date: ${form.preferred_date}
-Preferred Time: ${form.preferred_time}
-Mode: ${form.consultation_mode}
+Visit Type: Clinic Visit
+Timing: Cytocare team will share timing through WhatsApp
 `;
 
     alert("Consultation request submitted successfully!");
@@ -335,15 +335,15 @@ Mode: ${form.consultation_mode}
     );
 
     setForm({
-      patient_name: "",
-      patient_email: "",
-      phone: "",
-      age: "",
-      health_concern: "",
-      consultation_mode: "Clinic Visit",
-      preferred_date: "",
-      preferred_time: "",
-    });
+  patient_name: "",
+  patient_email: "",
+  phone: "",
+  age: "",
+  health_concern: "",
+  consultation_mode: "Clinic Visit",
+  preferred_date: "",
+  preferred_time: "Timing will be shared through WhatsApp",
+});
 
     setSelectedDoctor(null);
   }
@@ -657,41 +657,21 @@ Mode: ${form.consultation_mode}
                 required
               />
 
-              <select
-                value={form.consultation_mode}
-                onChange={(e) =>
-                  updateField("consultation_mode", e.target.value)
-                }
-                className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
-                required
-              >
-                <option value="Clinic Visit">Clinic Visit</option>
-                <option value="Phone Call">Phone Call</option>
-                <option value="WhatsApp Call">WhatsApp Call</option>
-              </select>
+              <div>
+  <input
+    type="date"
+    min={today}
+    value={form.preferred_date}
+    onChange={(e) => updateField("preferred_date", e.target.value)}
+    className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
+    required
+  />
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <input
-                  type="date"
-                  min={today}
-                  value={form.preferred_date}
-                  onChange={(e) =>
-                    updateField("preferred_date", e.target.value)
-                  }
-                  className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
-                  required
-                />
-
-                <input
-                  type="time"
-                  value={form.preferred_time}
-                  onChange={(e) =>
-                    updateField("preferred_time", e.target.value)
-                  }
-                  className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
-                  required
-                />
-              </div>
+  <p className="mt-3 rounded-xl bg-[#f5f9ff] px-4 py-3 text-sm font-bold leading-6 text-slate-500">
+    Consultation is currently available for clinic visit only. Appointment
+    timing will be confirmed and shared through WhatsApp by Cytocare team.
+  </p>
+</div>
 
               <button
                 type="submit"
