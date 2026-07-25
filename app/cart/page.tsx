@@ -30,42 +30,6 @@ type PatientProfile = {
 
 type PaymentMode = "later" | "online";
 
-type RazorpayPaymentResponse = {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-};
-
-type RazorpayCheckoutOptions = {
-  key: string;
-  amount: number | string;
-  currency: string;
-  name: string;
-  description: string;
-  order_id: string;
-  prefill: {
-    name: string;
-    email: string;
-    contact: string;
-  };
-  theme: {
-    color: string;
-  };
-  config?: object;
-  handler: (response: RazorpayPaymentResponse) => void;
-  modal?: {
-    ondismiss?: () => void;
-  };
-};
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: RazorpayCheckoutOptions) => {
-      open: () => void;
-    };
-  }
-}
-
 type CartAssignment = {
   testName: string;
   patientName: string;
@@ -92,6 +56,49 @@ const ELITE_DISCOUNT_MINIMUM = 699;
 
 type CytocareTest = (typeof cytocareTests)[number];
 
+const WORK_START_TIME = "08:00";
+const WORK_END_TIME = "19:00";
+
+function getTodayInputDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getCurrentInputTime() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+
+  return `${hours}:${minutes}`;
+}
+
+function isPastBookingDate(dateValue: string) {
+  return dateValue < getTodayInputDate();
+}
+
+function isSundayBookingDate(dateValue: string) {
+  if (!dateValue) return false;
+
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const selectedDate = new Date(year, month - 1, day);
+
+  return selectedDate.getDay() === 0;
+}
+
+function isOutsideWorkingTime(timeValue: string) {
+  return timeValue < WORK_START_TIME || timeValue > WORK_END_TIME;
+}
+
+function isPastTimeForToday(dateValue: string, timeValue: string) {
+  if (dateValue !== getTodayInputDate()) return false;
+
+  return timeValue < getCurrentInputTime();
+}
+
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<string[]>([]);
   const [cartAssignments, setCartAssignments] = useState<CartAssignment[]>([]);
@@ -113,9 +120,12 @@ export default function CartPage() {
   const [membershipRelation, setMembershipRelation] = useState("Self");
 
   const [loading, setLoading] = useState(false);
+  const [todayInputDate, setTodayInputDate] = useState("");
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("cytocare_cart");
+  setTodayInputDate(getTodayInputDate());
+
+  const savedCart = localStorage.getItem("cytocare_cart");
     const savedAssignments = localStorage.getItem("cytocare_cart_assignments");
 
     if (savedCart) {
@@ -187,6 +197,27 @@ export default function CartPage() {
     );
   }
 
+function getCustomCartItem(testName: string) {
+  const savedCustomPrices = localStorage.getItem("cytocare_custom_prices");
+
+  if (!savedCustomPrices) return null;
+
+  try {
+    const customPrices = JSON.parse(savedCustomPrices) as Record<
+      string,
+      {
+        price: number;
+        category: string;
+        reportingTime: string;
+      }
+    >;
+
+    return customPrices[testName] || null;
+  } catch {
+    return null;
+  }
+}
+
   function getAssignmentForTest(testName: string): CartAssignment {
     const found = cartAssignments.find(
       (assignment) => assignment.testName === testName
@@ -205,130 +236,128 @@ export default function CartPage() {
   }
 
   const cartBreakup = useMemo(() => {
-  const membershipItems = cartItems.filter((item) => isMembershipItem(item));
-  const testItems = cartItems.filter((item) => !isMembershipItem(item));
+    const membershipItems = cartItems.filter((item) => isMembershipItem(item));
+    const testItems = cartItems.filter((item) => !isMembershipItem(item));
 
-  const buyingMembershipNow = membershipItems.length > 0;
-  const membershipFee = buyingMembershipNow ? MEMBERSHIP_PRICE : 0;
+    const buyingMembershipNow = membershipItems.length > 0;
+    const membershipFee = buyingMembershipNow ? MEMBERSHIP_PRICE : 0;
 
-  const firstMappedTests = testItems.map((item) => {
-    const matchedTest = findTestByName(item);
-    const assignment = getAssignmentForTest(item);
-    const price = matchedTest?.price ?? 0;
+    const firstMappedTests = testItems.map((item) => {
+      const matchedTest = findTestByName(item);
+const customItem = getCustomCartItem(item);
+const assignment = getAssignmentForTest(item);
+const price = matchedTest?.price ?? customItem?.price ?? 0;
 
-    const matchesNewMembershipPatient =
-      buyingMembershipNow &&
-      normalText(assignment.patientName) === normalText(membershipPatientName);
+      const matchesNewMembershipPatient =
+        buyingMembershipNow &&
+        normalText(assignment.patientName) === normalText(membershipPatientName);
 
-    const eliteSelected =
-      assignment.eliteBenefitApplied || matchesNewMembershipPatient;
+      const eliteSelected =
+        assignment.eliteBenefitApplied || matchesNewMembershipPatient;
+
+      return {
+        cartName: item,
+        price,
+        category: matchedTest?.category ?? customItem?.category ?? "Package",
+reportingTime:
+  matchedTest?.reportingTime ?? customItem?.reportingTime ?? "Ask lab",
+        assignment,
+        eliteSelected,
+      };
+    });
+
+    const eliteSelectedTotal = firstMappedTests
+      .filter((item) => item.eliteSelected)
+      .reduce((sum, item) => sum + item.price, 0);
+
+    const eliteDiscountAllowed = eliteSelectedTotal > ELITE_DISCOUNT_MINIMUM;
+
+    const mappedTests: MappedCartTest[] = firstMappedTests.map((item) => {
+      const eliteEligible = item.eliteSelected && eliteDiscountAllowed;
+
+      const eliteDiscount = eliteEligible ? Math.round(item.price * 0.1) : 0;
+
+      return {
+        cartName: item.cartName,
+        price: item.price,
+        category: item.category,
+        reportingTime: item.reportingTime,
+        assignment: item.assignment,
+        eliteEligible,
+        eliteDiscount,
+      };
+    });
+
+    const testTotal = mappedTests.reduce((sum, item) => sum + item.price, 0);
+
+    const eliteEligibleTotal = mappedTests
+      .filter((item) => item.assignment.eliteBenefitApplied)
+      .reduce((sum, item) => sum + item.price, 0);
+
+    const normalPatientTotal = mappedTests
+      .filter((item) => !item.assignment.eliteBenefitApplied)
+      .reduce((sum, item) => sum + item.price, 0);
+
+    const eliteDiscount = mappedTests.reduce(
+      (sum, item) => sum + item.eliteDiscount,
+      0
+    );
+
+    const hasElitePatientTests = eliteEligibleTotal > 0;
+    const hasNormalPatientTests = normalPatientTotal > 0;
+
+    const eliteHomeCollectionCharge =
+      collectionType === "home" && hasElitePatientTests
+        ? HOME_COLLECTION_CHARGE
+        : 0;
+
+    const normalHomeCollectionCharge =
+      collectionType === "home" && hasNormalPatientTests
+        ? HOME_COLLECTION_CHARGE
+        : 0;
+
+    const homeCollectionCharge =
+      eliteHomeCollectionCharge + normalHomeCollectionCharge;
+
+    const homeCollectionDiscount =
+      collectionType === "home" && eliteSelectedTotal > FREE_COLLECTION_MINIMUM
+        ? eliteHomeCollectionCharge
+        : 0;
+
+    const finalPayable =
+      testTotal +
+      membershipFee +
+      homeCollectionCharge -
+      eliteDiscount -
+      homeCollectionDiscount;
 
     return {
-      cartName: item,
-      price,
-      category: matchedTest?.category ?? "Test",
-      reportingTime: matchedTest?.reportingTime ?? "Ask lab",
-      assignment,
-      eliteSelected,
-    };
-  });
-
-  const eliteSelectedTotal = firstMappedTests
-    .filter((item) => item.eliteSelected)
-    .reduce((sum, item) => sum + item.price, 0);
-
-  const eliteDiscountAllowed =
-    eliteSelectedTotal > ELITE_DISCOUNT_MINIMUM;
-
-  const mappedTests: MappedCartTest[] = firstMappedTests.map((item) => {
-    const eliteEligible = item.eliteSelected && eliteDiscountAllowed;
-
-    const eliteDiscount = eliteEligible
-      ? Math.round(item.price * 0.1)
-      : 0;
-
-    return {
-      cartName: item.cartName,
-      price: item.price,
-      category: item.category,
-      reportingTime: item.reportingTime,
-      assignment: item.assignment,
-      eliteEligible,
+      membershipItems,
+      testItems,
+      mappedTests,
+      buyingMembershipNow,
+      membershipFee,
+      testTotal,
+      eliteSelectedTotal,
+      eliteDiscountAllowed,
+      eliteEligibleTotal,
+      normalPatientTotal,
       eliteDiscount,
+      eliteHomeCollectionCharge,
+      normalHomeCollectionCharge,
+      homeCollectionCharge,
+      homeCollectionDiscount,
+      finalPayable,
     };
-  });
-
-  const testTotal = mappedTests.reduce((sum, item) => sum + item.price, 0);
-
-  const eliteEligibleTotal = mappedTests
-    .filter((item) => item.assignment.eliteBenefitApplied)
-    .reduce((sum, item) => sum + item.price, 0);
-
-  const normalPatientTotal = mappedTests
-    .filter((item) => !item.assignment.eliteBenefitApplied)
-    .reduce((sum, item) => sum + item.price, 0);
-
-  const eliteDiscount = mappedTests.reduce(
-    (sum, item) => sum + item.eliteDiscount,
-    0
-  );
-
-  const hasElitePatientTests = eliteEligibleTotal > 0;
-  const hasNormalPatientTests = normalPatientTotal > 0;
-
-  const eliteHomeCollectionCharge =
-    collectionType === "home" && hasElitePatientTests
-      ? HOME_COLLECTION_CHARGE
-      : 0;
-
-  const normalHomeCollectionCharge =
-    collectionType === "home" && hasNormalPatientTests
-      ? HOME_COLLECTION_CHARGE
-      : 0;
-
-  const homeCollectionCharge =
-    eliteHomeCollectionCharge + normalHomeCollectionCharge;
-
-  const homeCollectionDiscount =
-    collectionType === "home" &&
-    eliteSelectedTotal > FREE_COLLECTION_MINIMUM
-      ? eliteHomeCollectionCharge
-      : 0;
-
-  const finalPayable =
-    testTotal +
-    membershipFee +
-    homeCollectionCharge -
-    eliteDiscount -
-    homeCollectionDiscount;
-
-  return {
-    membershipItems,
-    testItems,
-    mappedTests,
-    buyingMembershipNow,
-    membershipFee,
-    testTotal,
-    eliteSelectedTotal,
-    eliteDiscountAllowed,
-    eliteEligibleTotal,
-    normalPatientTotal,
-    eliteDiscount,
-    eliteHomeCollectionCharge,
-    normalHomeCollectionCharge,
-    homeCollectionCharge,
-    homeCollectionDiscount,
-    finalPayable,
-  };
-}, [
-  cartItems,
-  cartAssignments,
-  collectionType,
-  membershipPatientName,
-  name,
-  phone,
-  patientProfile,
-]);
+  }, [
+    cartItems,
+    cartAssignments,
+    collectionType,
+    membershipPatientName,
+    name,
+    phone,
+    patientProfile,
+  ]);
 
   function removeItem(itemName: string) {
     const updatedCart = cartItems.filter((item) => item !== itemName);
@@ -354,32 +383,74 @@ export default function CartPage() {
     localStorage.removeItem("cytocare_cart_assignments");
   }
 
-  function loadRazorpayScript() {
-    return new Promise<boolean>((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
+function handleBookingDateChange(dateValue: string) {
+  if (!dateValue) {
+    setBookingDate("");
+    return;
   }
 
-  async function startOnlinePayment(checkoutGroupKey: string, paymentAmount: number) {
+  if (isPastBookingDate(dateValue)) {
+    alert("Past date is not allowed. Please select today or a future date.");
+    setBookingDate("");
+    return;
+  }
+
+  if (isSundayBookingDate(dateValue)) {
+    alert("Sunday is holiday. Please select Monday to Saturday.");
+    setBookingDate("");
+    return;
+  }
+
+  setBookingDate(dateValue);
+}
+
+function handleBookingTimeChange(timeValue: string) {
+  if (!timeValue) {
+    setBookingTime("");
+    return;
+  }
+
+  if (isOutsideWorkingTime(timeValue)) {
+    alert("Please select time between 8:00 AM and 7:00 PM.");
+    setBookingTime("");
+    return;
+  }
+
+  setBookingTime(timeValue);
+}
+
+function validateBookingSchedule() {
+  if (cartBreakup.testItems.length === 0) return "";
+
+  if (!bookingDate || !bookingTime) {
+    return "Please select booking date and time.";
+  }
+
+  if (isPastBookingDate(bookingDate)) {
+    return "Past date is not allowed. Please select today or a future date.";
+  }
+
+  if (isSundayBookingDate(bookingDate)) {
+    return "Sunday is holiday. Please select Monday to Saturday.";
+  }
+
+  if (isOutsideWorkingTime(bookingTime)) {
+    return "Please select time between 8:00 AM and 7:00 PM.";
+  }
+
+  if (isPastTimeForToday(bookingDate, bookingTime)) {
+    return "Past time is not allowed for today's booking.";
+  }
+
+  return "";
+}
+
+  async function startOnlinePayment(
+    checkoutGroupKey: string,
+    paymentAmount: number
+  ) {
     try {
-      const scriptLoaded = await loadRazorpayScript();
-
-      if (!scriptLoaded) {
-        setLoading(false);
-        alert("Payment window could not load. Please check internet and try again.");
-        return;
-      }
-
-      const orderResponse = await fetch("/api/razorpay/create-order", {
+      const response = await fetch("/api/payu/create-payment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -393,235 +464,164 @@ export default function CartPage() {
         }),
       });
 
-      const orderData = await orderResponse.json();
+      const data = await response.json();
 
-      if (!orderResponse.ok) {
+      if (!response.ok || !data.success) {
         setLoading(false);
-        alert(orderData.error || "Unable to create payment order.");
+        alert(data.message || "Unable to start PayU payment.");
         return;
       }
 
-      if (!window.Razorpay) {
-        setLoading(false);
-        alert("Payment window is not available. Please try again.");
-        return;
-      }
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = data.action;
 
-      const options: RazorpayCheckoutOptions = {
-        key: orderData.keyId,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Cytocare Path Lab",
-        description: `Cytocare test booking - ${checkoutGroupKey}`,
-        order_id: orderData.orderId,
-        prefill: {
-          name,
-          email,
-          contact: phone,
-        },
-        theme: {
-          color: "#0754dc",
-        },
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: "Pay using UPI",
-                instruments: [
-                  {
-                    method: "upi",
-                  },
-                ],
-              },
-            },
-            sequence: ["block.upi"],
-            preferences: {
-              show_default_blocks: true,
-            },
-          },
-        },
-        handler: async (response) => {
-          setLoading(true);
+      Object.entries(data.params).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = String(value);
+        form.appendChild(input);
+      });
 
-          const verifyResponse = await fetch("/api/razorpay/verify-payment", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              ...response,
-              checkoutGroupKey,
-              amount: paymentAmount,
-            }),
-          });
-
-          const verifyData = await verifyResponse.json();
-
-          setLoading(false);
-
-          if (!verifyResponse.ok) {
-            alert(verifyData.error || "Payment verification failed. Please contact Cytocare.");
-            return;
-          }
-
-          clearCart();
-          alert("Payment successful. Your booking is confirmed.");
-          window.location.href = "/patient-dashboard";
-        },
-        modal: {
-          ondismiss: () => {
-            setLoading(false);
-            alert(
-              "Booking has been saved, but payment was not completed. You can pay later from My Bookings or contact Cytocare."
-            );
-            window.location.href = "/patient-dashboard";
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      setLoading(false);
-      razorpay.open();
+      document.body.appendChild(form);
+      form.submit();
     } catch (error) {
-      console.error("Online payment error:", error);
+      console.error("PayU payment error:", error);
       setLoading(false);
       alert("Payment could not start. Please try again.");
     }
   }
 
   async function submitCheckout(paymentMode: PaymentMode = "later") {
-    if (!user) {
-      alert("Please login first.");
-      window.location.href = "/";
+  if (!user) {
+    alert("Please login first.");
+    window.location.href = "/";
+    return;
+  }
+
+  if (cartItems.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  if (!name.trim() || !phone.trim() || !email.trim()) {
+    alert("Please fill account name, phone and email.");
+    return;
+  }
+
+  if (cartBreakup.buyingMembershipNow && !membershipPatientName.trim()) {
+    alert("Please enter the first Elite member name.");
+    return;
+  }
+
+  const scheduleError = validateBookingSchedule();
+
+if (scheduleError) {
+  alert(scheduleError);
+  return;
+}
+
+  if (collectionType === "home" && cartBreakup.testItems.length > 0) {
+    if (!address.trim()) {
+      alert("Please enter home collection address.");
       return;
     }
+  }
 
-    if (cartItems.length === 0) {
-      alert("Your cart is empty.");
-      return;
-    }
+  setLoading(true);
 
-    if (!name.trim() || !phone.trim() || !email.trim()) {
-      alert("Please fill account name, phone and email.");
-      return;
-    }
+  const checkoutGroupKey = `CYTO-${user.id.slice(0, 8)}-${Date.now()}`;
+  const now = new Date();
 
-    if (cartBreakup.buyingMembershipNow && !membershipPatientName.trim()) {
-      alert("Please enter the first Elite member name.");
-      return;
-    }
+  const { error: profileError } = await supabase.from("patient_profiles").upsert({
+    id: user.id,
+    full_name: name,
+    phone,
+    email,
+    last_address: address,
+    updated_at: now.toISOString(),
+  });
 
-    if (cartBreakup.testItems.length > 0 && (!bookingDate || !bookingTime)) {
-      alert("Please select booking date and time.");
-      return;
-    }
+  if (profileError) {
+    setLoading(false);
+    alert(profileError.message);
+    return;
+  }
 
-    if (collectionType === "home" && cartBreakup.testItems.length > 0) {
-      if (!address.trim()) {
-        alert("Please enter home collection address.");
-        return;
-      }
-    }
+  const bookingRows: Record<string, unknown>[] = [];
 
-    setLoading(true);
+  if (cartBreakup.buyingMembershipNow) {
+    bookingRows.push({
+      name,
+      phone,
+      email,
+      address: address || "Not provided",
+      test_name: "Cytocare Elite Membership - ₹89/year",
+      booking_date: bookingDate || now.toISOString().slice(0, 10),
+      booking_time: bookingTime || "Membership",
+      booking_type: "Elite Membership",
+      booking_status:
+        paymentMode === "online" ? "Payment Pending" : "Pending",
+      payment_status:
+        paymentMode === "online" ? "Payment Pending" : "Pending",
+      report_status: "Not Applicable",
+      reference_number: `${checkoutGroupKey}-MEMBERSHIP`,
+      amount_paid: 0,
+      checkout_group_key: checkoutGroupKey,
+      checkout_total_payable: cartBreakup.finalPayable,
+      checkout_amount_paid: 0,
+      admin_notes: `
+ELITE MEMBERSHIP ORDER
+Membership Fee: ₹${cartBreakup.membershipFee}
+Member Name: ${membershipPatientName.trim()}
+Member Phone: ${membershipPatientPhone.trim() || "Not added"}
+Relation: ${membershipRelation.trim() || "Self"}
+Payment Mode Selected: ${paymentMode}
+Membership will activate only after payment confirmation.
+`,
+      order_type: "elite_membership",
+      membership_member_name: membershipPatientName.trim(),
+      membership_member_phone: membershipPatientPhone.trim() || null,
+      membership_member_relation: membershipRelation.trim() || "Self",
 
-    const checkoutGroupKey = `CYTO-${user.id.slice(0, 8)}-${Date.now()}`;
+      test_for_name: membershipPatientName.trim(),
+      test_for_type: "Elite Membership",
+      elite_family_member_id: null,
+      elite_benefit_applied: false,
 
-    const now = new Date();
-    const membershipExpiresAt = new Date();
-    membershipExpiresAt.setDate(membershipExpiresAt.getDate() + 365);
+      test_total: 0,
+      membership_fee: cartBreakup.membershipFee,
+      elite_discount: 0,
+      home_collection_charge: 0,
+      home_collection_discount: 0,
+      final_payable: cartBreakup.membershipFee,
+    });
+  }
 
-    let newEliteMemberId: string | null = null;
+  if (cartBreakup.mappedTests.length > 0) {
+    const testRows = cartBreakup.mappedTests.map((item, index) => {
+      const itemHomeCharge =
+        index === 0 ? cartBreakup.homeCollectionCharge : 0;
 
-    if (cartBreakup.buyingMembershipNow) {
-      const { error: profileError } = await supabase
-        .from("patient_profiles")
-        .upsert({
-          id: user.id,
-          full_name: name,
-          phone,
-          email,
-          last_address: address,
-          membership_plan: "Cytocare Elite Membership - ₹89/year",
-          membership_status: "active",
-          membership_started_at: now.toISOString(),
-          membership_expires_at: membershipExpiresAt.toISOString(),
-          updated_at: now.toISOString(),
-        });
+      const itemHomeDiscount =
+        index === 0 ? cartBreakup.homeCollectionDiscount : 0;
 
-      if (profileError) {
-        setLoading(false);
-        alert(profileError.message);
-        return;
-      }
+      const itemFinalPayable =
+        item.price + itemHomeCharge - item.eliteDiscount - itemHomeDiscount;
 
-      const { data: insertedMember, error: memberError } = await supabase
-        .from("elite_family_members")
-        .insert({
-          user_id: user.id,
-          full_name: membershipPatientName.trim(),
-          phone: membershipPatientPhone.trim() || null,
-          relation: membershipRelation.trim() || "Self",
-          age: null,
-          gender: null,
-          is_active: true,
-          updated_at: now.toISOString(),
-        })
-        .select("id")
-        .single();
+      const isNewElitePatient =
+        cartBreakup.buyingMembershipNow &&
+        normalText(item.assignment.patientName) ===
+          normalText(membershipPatientName);
 
-      if (memberError) {
-        setLoading(false);
-        alert(memberError.message);
-        return;
-      }
+      const patientType = item.eliteEligible
+        ? isNewElitePatient
+          ? "New Elite Registered Member"
+          : "Elite Registered Member"
+        : "Other Patient";
 
-      newEliteMemberId = insertedMember?.id ?? null;
-    } else {
-      await supabase.from("patient_profiles").upsert({
-        id: user.id,
-        full_name: name,
-        phone,
-        email,
-        last_address: address,
-        updated_at: now.toISOString(),
-      });
-    }
-
-    if (cartBreakup.mappedTests.length > 0) {
-      const rows = cartBreakup.mappedTests.map((item, index) => {
-        const itemMembershipFee =
-          index === 0 ? cartBreakup.membershipFee : 0;
-
-        const itemHomeCharge =
-          index === 0 ? cartBreakup.homeCollectionCharge : 0;
-
-        const itemHomeDiscount =
-          index === 0 ? cartBreakup.homeCollectionDiscount : 0;
-
-        const itemFinalPayable =
-          item.price +
-          itemMembershipFee +
-          itemHomeCharge -
-          item.eliteDiscount -
-          itemHomeDiscount;
-
-        const isNewElitePatient =
-          cartBreakup.buyingMembershipNow &&
-          normalText(item.assignment.patientName) ===
-            normalText(membershipPatientName);
-
-        const finalEliteMemberId =
-          item.assignment.eliteFamilyMemberId ||
-          (isNewElitePatient ? newEliteMemberId : null);
-
-        const patientType = item.eliteEligible
-          ? isNewElitePatient
-            ? "New Elite Registered Member"
-            : "Elite Registered Member"
-          : "Other Patient";
-
-        const priceNote = `
+      const priceNote = `
 ORDER PRICE BREAKUP
 Order Test Total: ₹${cartBreakup.testTotal}
 Order Elite Eligible Total: ₹${cartBreakup.eliteEligibleTotal}
@@ -629,6 +629,7 @@ Order Normal Patient Total: ₹${cartBreakup.normalPatientTotal}
 Order Elite Discount: -₹${cartBreakup.eliteDiscount}
 Order Home Collection Charge: ₹${cartBreakup.homeCollectionCharge}
 Order Home Collection Discount: -₹${cartBreakup.homeCollectionDiscount}
+Order Membership Fee: ₹${cartBreakup.membershipFee}
 Order Final Payable: ₹${cartBreakup.finalPayable}
 
 THIS TEST
@@ -640,79 +641,79 @@ Patient Type: ${patientType}
 Elite Benefit Applied: ${item.eliteEligible ? "Yes" : "No"}
 This Test Discount: -₹${item.eliteDiscount}
 This Test Final Payable: ₹${itemFinalPayable}
-Collection Type: ${
-          collectionType === "home" ? "Home Collection" : "Lab Visit"
-        }
+Collection Type: ${collectionType === "home" ? "Home Collection" : "Lab Visit"}
 `;
 
-        return {
-          name,
-          phone,
-          email,
-          address: collectionType === "home" ? address : "Lab Visit",
-          test_name: item.cartName,
-          booking_date: bookingDate,
-          booking_time: bookingTime,
-          booking_type:
-            collectionType === "home" ? "Home Collection" : "Book Test",
-          booking_status: "Pending",
-          payment_status: paymentMode === "online" ? "Payment Pending" : "Pending",
-          report_status: "Not Uploaded",
-          reference_number: `${checkoutGroupKey}-${index + 1}`,
-          amount_paid: 0,
-          checkout_group_key: checkoutGroupKey,
-          checkout_total_payable: cartBreakup.finalPayable,
-          checkout_amount_paid: 0,
-          admin_notes: priceNote,
+      return {
+        name,
+        phone,
+        email,
+        address: collectionType === "home" ? address : "Lab Visit",
+        test_name: item.cartName,
+        booking_date: bookingDate,
+        booking_time: bookingTime,
+        booking_type:
+          collectionType === "home" ? "Home Collection" : "Book Test",
+        booking_status:
+          paymentMode === "online" ? "Payment Pending" : "Pending",
+        payment_status:
+          paymentMode === "online" ? "Payment Pending" : "Pending",
+        report_status: "Not Uploaded",
+        reference_number: `${checkoutGroupKey}-${index + 1}`,
+        amount_paid: 0,
+        checkout_group_key: checkoutGroupKey,
+        checkout_total_payable: cartBreakup.finalPayable,
+        checkout_amount_paid: 0,
+        admin_notes: priceNote,
 
-          test_for_name: item.assignment.patientName,
-          test_for_type: patientType,
-          elite_family_member_id: finalEliteMemberId,
-          elite_benefit_applied: item.eliteEligible,
+        order_type: "test_booking",
 
-          test_total: item.price,
-          membership_fee: itemMembershipFee,
-          elite_discount: item.eliteDiscount,
-          home_collection_charge: itemHomeCharge,
-          home_collection_discount: itemHomeDiscount,
-          final_payable: itemFinalPayable,
-        };
-      });
+        test_for_name: item.assignment.patientName,
+        test_for_type: patientType,
+        elite_family_member_id: item.assignment.eliteFamilyMemberId,
+        elite_benefit_applied: item.eliteEligible,
 
-      const { error: bookingError } = await supabase
-        .from("cytocare_bookings")
-        .insert(rows);
+        test_total: item.price,
+        membership_fee: 0,
+        elite_discount: item.eliteDiscount,
+        home_collection_charge: itemHomeCharge,
+        home_collection_discount: itemHomeDiscount,
+        final_payable: itemFinalPayable,
+      };
+    });
 
-      if (bookingError) {
-        setLoading(false);
-        alert(bookingError.message);
-        return;
-      }
-    }
-
-    if (paymentMode === "online") {
-      if (cartBreakup.mappedTests.length === 0) {
-        setLoading(false);
-        alert("Online payment is available for test bookings only.");
-        return;
-      }
-
-      await startOnlinePayment(checkoutGroupKey, cartBreakup.finalPayable);
-      return;
-    }
-
-    clearCart();
-    setLoading(false);
-
-    if (cartBreakup.buyingMembershipNow && cartBreakup.testItems.length === 0) {
-      alert("Elite membership activated. Now add your family members.");
-      window.location.href = "/elite-family";
-      return;
-    }
-
-    alert("Checkout submitted successfully.");
-    window.location.href = "/patient-dashboard";
+    bookingRows.push(...testRows);
   }
+
+  const { error: bookingError } = await supabase
+    .from("cytocare_bookings")
+    .insert(bookingRows);
+
+  if (bookingError) {
+    setLoading(false);
+    alert(bookingError.message);
+    return;
+  }
+
+  if (paymentMode === "online") {
+    await startOnlinePayment(checkoutGroupKey, cartBreakup.finalPayable);
+    return;
+  }
+
+  clearCart();
+  setLoading(false);
+
+  if (cartBreakup.buyingMembershipNow) {
+    alert(
+      "Elite membership request saved. Membership will activate only after payment confirmation."
+    );
+    window.location.href = "/patient-dashboard";
+    return;
+  }
+
+  alert("Checkout submitted successfully.");
+  window.location.href = "/patient-dashboard";
+}
 
   return (
     <main className="min-h-screen bg-[#f5f9ff] text-[#07142f]">
@@ -784,18 +785,18 @@ Collection Type: ${
                               </p>
 
                               {mappedTest?.eliteEligible ? (
-  <span className="inline-flex rounded-full bg-[#eafff0] px-3 py-1 text-xs font-bold text-[#05a832]">
-    Elite Benefit Applied
-  </span>
-) : mappedTest?.assignment.eliteBenefitApplied ? (
-  <span className="inline-flex rounded-full bg-[#fff8df] px-3 py-1 text-xs font-bold text-[#7a4f00]">
-    Elite selected, combined value below ₹699,
-  </span>
-) : (
-  <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-    Normal Price
-  </span>
-)}
+                                <span className="inline-flex rounded-full bg-[#eafff0] px-3 py-1 text-xs font-bold text-[#05a832]">
+                                  Elite Benefit Applied
+                                </span>
+                              ) : mappedTest?.assignment.eliteBenefitApplied ? (
+                                <span className="inline-flex rounded-full bg-[#fff8df] px-3 py-1 text-xs font-bold text-[#7a4f00]">
+                                  Elite selected, combined value below ₹699
+                                </span>
+                              ) : (
+                                <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                                  Normal Price
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -901,6 +902,7 @@ Collection Type: ${
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Account Email"
                 autoComplete="email"
+                suppressHydrationWarning
                 className="rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
               />
 
@@ -918,18 +920,26 @@ Collection Type: ${
               {cartBreakup.testItems.length > 0 && (
                 <>
                   <input
-                    type="date"
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                    className="rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
-                  />
+  type="date"
+  min={todayInputDate}
+  value={bookingDate}
+  onChange={(e) => handleBookingDateChange(e.target.value)}
+  className="rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+/>
 
-                  <input
-                    type="time"
-                    value={bookingTime}
-                    onChange={(e) => setBookingTime(e.target.value)}
-                    className="rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
-                  />
+<input
+  type="time"
+  min={WORK_START_TIME}
+  max={WORK_END_TIME}
+  step="900"
+  value={bookingTime}
+  onChange={(e) => handleBookingTimeChange(e.target.value)}
+  className="rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+/>
+
+<p className="text-sm font-bold text-slate-500 md:col-span-2">
+  Available Monday to Saturday, 8:00 AM to 7:00 PM. Sunday closed.
+</p>
                 </>
               )}
 
@@ -1034,42 +1044,45 @@ Collection Type: ${
               label="Home Collection Charge"
               value={`₹${cartBreakup.homeCollectionCharge}`}
             />
-{cartBreakup.normalHomeCollectionCharge > 0 && (
-  <PriceRow
-    label="Normal Patient Home Collection Charge"
-    value={`₹${cartBreakup.normalHomeCollectionCharge}`}
-  />
-)}
 
-{cartBreakup.eliteHomeCollectionCharge > 0 &&
-  cartBreakup.homeCollectionDiscount > 0 && (
-    <div className="rounded-2xl bg-[#eafff0] p-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="font-extrabold text-[#05a832]">
-            Elite Home Collection
-          </p>
-          <p className="mt-1 text-sm font-bold text-[#05a832]">
-            ₹{cartBreakup.homeCollectionDiscount} waived
-          </p>
-        </div>
+            {cartBreakup.normalHomeCollectionCharge > 0 && (
+              <PriceRow
+                label="Normal Patient Home Collection Charge"
+                value={`₹${cartBreakup.normalHomeCollectionCharge}`}
+              />
+            )}
 
-        <p className="text-xl font-extrabold text-[#05a832]">FREE</p>
-      </div>
-    </div>
-  )}
+            {cartBreakup.eliteHomeCollectionCharge > 0 &&
+              cartBreakup.homeCollectionDiscount > 0 && (
+                <div className="rounded-2xl bg-[#eafff0] p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-extrabold text-[#05a832]">
+                        Elite Home Collection
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-[#05a832]">
+                        ₹{cartBreakup.homeCollectionDiscount} waived
+                      </p>
+                    </div>
 
-{cartBreakup.eliteHomeCollectionCharge > 0 &&
-  cartBreakup.homeCollectionDiscount === 0 && (
-    <PriceRow
-      label="Elite Home Collection Charge"
-      value={`₹${cartBreakup.eliteHomeCollectionCharge}`}
-    />
-  )}
+                    <p className="text-xl font-extrabold text-[#05a832]">
+                      FREE
+                    </p>
+                  </div>
+                </div>
+              )}
 
-{cartBreakup.homeCollectionCharge === 0 && (
-  <PriceRow label="Home Collection Charge" value="₹0" />
-)}
+            {cartBreakup.eliteHomeCollectionCharge > 0 &&
+              cartBreakup.homeCollectionDiscount === 0 && (
+                <PriceRow
+                  label="Elite Home Collection Charge"
+                  value={`₹${cartBreakup.eliteHomeCollectionCharge}`}
+                />
+              )}
+
+            {cartBreakup.homeCollectionCharge === 0 && (
+              <PriceRow label="Home Collection Charge" value="₹0" />
+            )}
 
             <div className="my-4 border-t border-dashed border-slate-200" />
 
@@ -1090,10 +1103,7 @@ Collection Type: ${
               type="button"
               onClick={() => submitCheckout("online")}
               disabled={
-                loading ||
-                cartItems.length === 0 ||
-                cartBreakup.mappedTests.length === 0 ||
-                cartBreakup.finalPayable <= 0
+                loading || cartItems.length === 0 || cartBreakup.finalPayable <= 0
               }
               className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#05a832] px-6 py-5 text-xl font-extrabold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
             >
@@ -1111,8 +1121,8 @@ Collection Type: ${
             </button>
 
             <p className="mt-3 rounded-2xl bg-[#f8fbff] p-4 text-sm font-bold leading-6 text-slate-500">
-              UPI will be shown first. Card, net banking and other payment options
-              may also appear inside the secure payment window.
+              UPI will be shown first. Card, net banking and other payment
+              options may also appear inside the secure payment window.
             </p>
           </div>
         </div>

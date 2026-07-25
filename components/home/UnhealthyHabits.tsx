@@ -251,7 +251,39 @@ export default function UnhealthyHabits({
 
                 <button
                   type="button"
-                  onClick={() => onAddToCart(item.title)}
+                  onClick={() => {
+  const savedCustomPrices = localStorage.getItem("cytocare_custom_prices");
+
+  let customPrices: Record<
+    string,
+    {
+      price: number;
+      category: string;
+      reportingTime: string;
+    }
+  > = {};
+
+  if (savedCustomPrices) {
+    try {
+      customPrices = JSON.parse(savedCustomPrices);
+    } catch {
+      customPrices = {};
+    }
+  }
+
+  customPrices[item.title] = {
+    price: item.price,
+    category: "Unhealthy Habits Package",
+    reportingTime: item.reportsIn,
+  };
+
+  localStorage.setItem(
+    "cytocare_custom_prices",
+    JSON.stringify(customPrices)
+  );
+
+  onAddToCart(item.title);
+}}
                   className="flex items-center gap-2 rounded-xl bg-[#e71935] px-6 py-3 text-[15px] font-extrabold text-white shadow-sm transition hover:bg-[#d9142e]"
                 >
                   <FaCartPlus />

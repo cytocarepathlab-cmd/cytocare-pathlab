@@ -40,6 +40,9 @@ type TestBooking = {
   report_status: string | null;
   report_url: string | null;
     reference_number?: string | null;
+    checkout_group_key?: string | null;
+checkout_total_payable?: number | null;
+checkout_amount_paid?: number | null;
   report_uploaded_at?: string | null;
   admin_notes: string | null;
   created_at: string;
@@ -87,6 +90,7 @@ type PatientReport = {
 
 type BookingGroup = {
   groupId: string;
+    checkoutGroupKey: string;
   latestCreatedAt: string;
   patientName: string;
   email: string;
@@ -141,28 +145,14 @@ function isReportReady(reportStatus: string | null, bookingStatus?: string | nul
 }
 
 function getBookingGroupKey(booking: TestBooking) {
-  const checkoutMinute = new Date(booking.created_at)
-    .toISOString()
-    .slice(0, 16);
+  if (booking.checkout_group_key) {
+    return booking.checkout_group_key;
+  }
 
-  return [
-    booking.name,
-    booking.email,
-    booking.phone,
-    booking.address,
-    booking.booking_date,
-    booking.booking_time,
-    checkoutMinute,
-  ].join("|");
+  return `OLD-${booking.id}`;
 }
 
-function getPayNowMessage(group: BookingGroup) {
-  const testNames = group.bookings.map((booking) => booking.test_name).join(", ");
 
-  return encodeURIComponent(
-    `Hello Cytocare, I want to pay for my recent booking.\n\nPatient: ${group.patientName}\nPhone: ${group.phone}\nTests: ${testNames}\nTotal Payable: ₹${group.totalPayable}\nPending Amount: ₹${group.totalPending}`
-  );
-}
 function getBookingReference(booking: TestBooking) {
   return booking.reference_number || `WEB-${booking.id}`;
 }
@@ -201,7 +191,9 @@ export default function PatientDashboard() {
   const [openBookingGroupId, setOpenBookingGroupId] = useState<string | null>(
   null
 );
-
+const [paymentLoadingGroupId, setPaymentLoadingGroupId] = useState<string | null>(
+  null
+);
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get("tab");
@@ -299,6 +291,63 @@ export default function PatientDashboard() {
     window.location.href = "/";
   }
 
+async function startPendingPayment(group: BookingGroup) {
+  if (!group.checkoutGroupKey) {
+    alert("Payment reference is missing. Please contact Cytocare.");
+    return;
+  }
+
+  if (group.totalPending <= 0) {
+    alert("This booking is already paid.");
+    return;
+  }
+
+  setPaymentLoadingGroupId(group.groupId);
+
+  try {
+    const response = await fetch("/api/payu/create-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: group.totalPending,
+        checkoutGroupKey: group.checkoutGroupKey,
+        patientName: group.patientName,
+        patientEmail: group.email,
+        patientPhone: group.phone,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      setPaymentLoadingGroupId(null);
+      alert(data.message || "Unable to start PayU payment.");
+      return;
+    }
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = data.action;
+
+    Object.entries(data.params).forEach(([key, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = String(value);
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  } catch (error) {
+    console.error("PayU pending payment error:", error);
+    setPaymentLoadingGroupId(null);
+    alert("Payment could not start. Please try again.");
+  }
+}
+
   function formatDate(dateValue: string | null | undefined) {
     if (!dateValue) return "Not selected";
 
@@ -329,8 +378,9 @@ const groupedTestBookings = useMemo(() => {
 
     if (!map.has(groupId)) {
       map.set(groupId, {
-        groupId,
-        latestCreatedAt: booking.created_at,
+  groupId,
+  checkoutGroupKey: booking.checkout_group_key || groupId,
+  latestCreatedAt: booking.created_at,
         patientName: booking.name,
         email: booking.email,
         phone: booking.phone,
@@ -602,18 +652,16 @@ const groupedTestBookings = useMemo(() => {
             {isOpen ? "Hide Details" : "View More"}
           </button>
 
-          {isRecent && group.totalPending > 0 && (
-            <a
-              href={`https://wa.me/919204344772?text=${getPayNowMessage(
-                group
-              )}`}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-xl bg-[#05a832] px-5 py-3 font-extrabold text-white"
-            >
-              Pay Now
-            </a>
-          )}
+          {group.totalPending > 0 && (
+  <button
+    type="button"
+    onClick={() => startPendingPayment(group)}
+    disabled={paymentLoadingGroupId === group.groupId}
+    className="rounded-xl bg-[#05a832] px-5 py-3 font-extrabold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+  >
+    {paymentLoadingGroupId === group.groupId ? "Opening PayU..." : "Pay Now"}
+  </button>
+)}
         </div>
 
         {isOpen && (
