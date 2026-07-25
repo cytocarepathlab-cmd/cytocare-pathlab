@@ -215,14 +215,32 @@ export default function Navbar({
   )}
 </div>
 
-          {/* MOBILE MENU BUTTON */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0754dc] text-xl text-white lg:hidden"
-          >
-            <FaBars />
-          </button>
+          {/* MOBILE CART + MENU BUTTONS */}
+<div className="flex items-center gap-3 lg:hidden">
+  <button
+    type="button"
+    onClick={onCartClick}
+    className="relative flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-[#07142f] shadow-sm"
+    aria-label="Cart"
+  >
+    <FaShoppingCart />
+
+    {cartCount > 0 && (
+      <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#e71935] text-xs font-bold text-white">
+        {cartCount}
+      </span>
+    )}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setMenuOpen(true)}
+    className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0754dc] text-xl text-white"
+    aria-label="Menu"
+  >
+    <FaBars />
+  </button>
+</div>
         </div>
       </div>
 
@@ -341,26 +359,44 @@ export default function Navbar({
             )}
 
             {/* QUICK ACTIONS */}
-            <div className="mb-6 grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onBookClick();
-                }}
-                className="rounded-2xl bg-[#0754dc] px-4 py-4 font-bold text-white"
-              >
-                Book Test
-              </button>
+<div className="mb-6 grid grid-cols-2 gap-4">
+  <button
+    type="button"
+    onClick={() => {
+      setMenuOpen(false);
+      onCartClick();
+    }}
+    className="relative rounded-2xl border border-slate-200 bg-white px-4 py-4 font-bold text-[#07142f]"
+  >
+    <FaShoppingCart className="mr-2 inline text-[#0754dc]" />
+    Cart
 
-              <a
-                href="#doctor-consultation"
-                onClick={() => setMenuOpen(false)}
-                className="rounded-2xl bg-[#e71935] px-4 py-4 text-center font-bold text-white"
-              >
-                Appointment
-              </a>
-            </div>
+    {cartCount > 0 && (
+      <span className="ml-2 rounded-full bg-[#e71935] px-2 py-1 text-xs font-bold text-white">
+        {cartCount}
+      </span>
+    )}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => {
+      setMenuOpen(false);
+      onBookClick();
+    }}
+    className="rounded-2xl bg-[#0754dc] px-4 py-4 font-bold text-white"
+  >
+    Book Test
+  </button>
+
+  <a
+    href="#doctor-consultation"
+    onClick={() => setMenuOpen(false)}
+    className="col-span-2 rounded-2xl bg-[#e71935] px-4 py-4 text-center font-bold text-white"
+  >
+    Appointment
+  </a>
+</div>
 
             {/* MENU LINKS */}
             <div className="space-y-3">
