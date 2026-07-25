@@ -401,73 +401,73 @@ const updatedCart = [...cartItems, pendingTest.name];
           </button>
         </div>
 
-        <div className="sticky top-0 z-40 rounded-[28px] bg-white p-5 shadow-md">
-          <div className="grid gap-4 xl:grid-cols-[1fr_330px]">
-            <div className="relative">
-              <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <div className="sticky top-0 z-40 rounded-[22px] bg-white p-3 shadow-md md:rounded-[28px] md:p-5">
+  <div className="grid gap-3 xl:grid-cols-[1fr_330px]">
+    <div className="relative">
+      <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 md:left-5 md:text-base" />
 
-              <input
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search CBC, LFT, TSH, Vitamin D, Fever Panel..."
-                className="w-full rounded-2xl border border-slate-200 py-5 pl-14 pr-5 text-lg font-semibold outline-none focus:border-[#0754dc]"
-              />
-            </div>
+      <input
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        placeholder="Search CBC, LFT, TSH, Vitamin D..."
+        className="w-full rounded-2xl border border-slate-200 py-3 pl-11 pr-4 text-sm font-semibold outline-none focus:border-[#0754dc] md:py-5 md:pl-14 md:pr-5 md:text-lg"
+      />
+    </div>
 
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="rounded-2xl border border-slate-200 px-5 py-5 text-lg font-extrabold outline-none focus:border-[#0754dc]"
-            >
-              <option value="All">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
+    <select
+      value={selectedCategory}
+      onChange={(e) => setSelectedCategory(e.target.value)}
+      className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-extrabold outline-none focus:border-[#0754dc] md:px-5 md:py-5 md:text-lg"
+    >
+      <option value="All">All Categories</option>
+      {categories.map((category) => (
+        <option key={category} value={category}>
+          {category}
+        </option>
+      ))}
+    </select>
+  </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("All")}
-              className={`rounded-full px-5 py-3 text-sm font-extrabold ${
-                selectedCategory === "All"
-                  ? "bg-[#0754dc] text-white"
-                  : "bg-[#eef5ff] text-[#0754dc]"
-              }`}
-            >
-              All ({cytocareTests.length})
-            </button>
+  <div className="mt-3 flex gap-2 overflow-x-auto pb-2 md:mt-5 md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
+    <button
+      type="button"
+      onClick={() => setSelectedCategory("All")}
+      className={`shrink-0 rounded-full px-4 py-2 text-xs font-extrabold md:px-5 md:py-3 md:text-sm ${
+        selectedCategory === "All"
+          ? "bg-[#0754dc] text-white"
+          : "bg-[#eef5ff] text-[#0754dc]"
+      }`}
+    >
+      All ({cytocareTests.length})
+    </button>
 
-            {categories.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setSelectedCategory(category)}
-                className={`rounded-full px-5 py-3 text-sm font-extrabold ${
-                  selectedCategory === category
-                    ? "bg-[#0754dc] text-white"
-                    : "bg-[#eef5ff] text-[#0754dc]"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
+    {categories.map((category) => (
+      <button
+        key={category}
+        type="button"
+        onClick={() => setSelectedCategory(category)}
+        className={`shrink-0 rounded-full px-4 py-2 text-xs font-extrabold md:px-5 md:py-3 md:text-sm ${
+          selectedCategory === category
+            ? "bg-[#0754dc] text-white"
+            : "bg-[#eef5ff] text-[#0754dc]"
+        }`}
+      >
+        {category}
+      </button>
+    ))}
+  </div>
+</div>
 
-        <h2 className="mt-10 text-4xl font-extrabold">
+        <h2 className="mt-6 text-2xl font-extrabold md:mt-10 md:text-4xl">
           {filteredTests.length} Tests Found
         </h2>
 
         <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {filteredTests.map((test) => (
             <div
-              key={test.name}
-              className="rounded-[28px] bg-white p-6 shadow-md"
-            >
+  key={test.name}
+  className="rounded-[22px] bg-white p-4 shadow-md md:rounded-[28px] md:p-6"
+>
               <div className="mb-6 flex items-start justify-between gap-4">
                 <span className="rounded-full bg-[#eef5ff] px-4 py-2 text-sm font-extrabold text-[#0754dc]">
                   {test.category}
@@ -478,7 +478,7 @@ const updatedCart = [...cartItems, pendingTest.name];
                 </span>
               </div>
 
-              <h3 className="min-h-[70px] text-2xl font-extrabold">
+              <h3 className="min-h-0 text-lg font-extrabold md:min-h-[70px] md:text-2xl">
                 {test.name}
               </h3>
 
