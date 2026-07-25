@@ -553,25 +553,23 @@ if (scheduleError) {
 
   if (cartBreakup.buyingMembershipNow) {
     bookingRows.push({
-      name,
-      phone,
-      email,
-      address: address || "Not provided",
-      test_name: "Cytocare Elite Membership - ₹89/year",
-      booking_date: bookingDate || now.toISOString().slice(0, 10),
-      booking_time: bookingTime || "Membership",
-      booking_type: "Elite Membership",
-      booking_status:
-        paymentMode === "online" ? "Payment Pending" : "Pending",
-      payment_status:
-        paymentMode === "online" ? "Payment Pending" : "Pending",
-      report_status: "Not Applicable",
-      reference_number: `${checkoutGroupKey}-MEMBERSHIP`,
-      amount_paid: 0,
-      checkout_group_key: checkoutGroupKey,
-      checkout_total_payable: cartBreakup.finalPayable,
-      checkout_amount_paid: 0,
-      admin_notes: `
+  name,
+  phone,
+  email,
+  address: address || "Not provided",
+  test_name: "Cytocare Elite Membership - ₹89/year",
+  booking_date: bookingDate || now.toISOString().slice(0, 10),
+  booking_time: bookingTime || "Membership",
+  booking_type: "Elite Membership",
+  booking_status: paymentMode === "online" ? "Payment Pending" : "Pending",
+  payment_status: paymentMode === "online" ? "Payment Pending" : "Pending",
+  report_status: "Not Applicable",
+  reference_number: `${checkoutGroupKey}-MEMBERSHIP`,
+  amount_paid: 0,
+  checkout_group_key: checkoutGroupKey,
+  checkout_total_payable: cartBreakup.finalPayable,
+  checkout_amount_paid: 0,
+  admin_notes: `
 ELITE MEMBERSHIP ORDER
 Membership Fee: ₹${cartBreakup.membershipFee}
 Member Name: ${membershipPatientName.trim()}
@@ -580,23 +578,23 @@ Relation: ${membershipRelation.trim() || "Self"}
 Payment Mode Selected: ${paymentMode}
 Membership will activate only after payment confirmation.
 `,
-      order_type: "elite_membership",
-      membership_member_name: membershipPatientName.trim(),
-      membership_member_phone: membershipPatientPhone.trim() || null,
-      membership_member_relation: membershipRelation.trim() || "Self",
+  order_type: "elite_membership",
+  membership_member_name: membershipPatientName.trim(),
+  membership_member_phone: membershipPatientPhone.trim() || null,
+  membership_member_relation: membershipRelation.trim() || "Self",
 
-      test_for_name: membershipPatientName.trim(),
-      test_for_type: "Elite Membership",
-      elite_family_member_id: null,
-      elite_benefit_applied: false,
+  test_for_name: membershipPatientName.trim(),
+  test_for_type: "Elite Membership",
+  elite_family_member_id: null,
+  elite_benefit_applied: false,
 
-      test_total: 0,
-      membership_fee: cartBreakup.membershipFee,
-      elite_discount: 0,
-      home_collection_charge: 0,
-      home_collection_discount: 0,
-      final_payable: cartBreakup.membershipFee,
-    });
+  test_total: 0,
+  membership_fee: cartBreakup.membershipFee,
+  elite_discount: 0,
+  home_collection_charge: 0,
+  home_collection_discount: 0,
+  final_payable: cartBreakup.membershipFee,
+});
   }
 
   if (cartBreakup.mappedTests.length > 0) {

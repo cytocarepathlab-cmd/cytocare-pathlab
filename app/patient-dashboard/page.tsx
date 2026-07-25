@@ -35,6 +35,7 @@ type TestBooking = {
   booking_date: string;
   booking_time: string;
   booking_type: string;
+  order_type?: string | null;
   booking_status: string | null;
   payment_status: string | null;
   report_status: string | null;
@@ -373,7 +374,9 @@ async function startPendingPayment(group: BookingGroup) {
 const groupedTestBookings = useMemo(() => {
   const map = new Map<string, BookingGroup>();
 
-  testBookings.forEach((booking) => {
+  testBookings
+  .filter((booking) => booking.order_type !== "elite_membership")
+  .forEach((booking) => {
     const groupId = getBookingGroupKey(booking);
 
     if (!map.has(groupId)) {

@@ -13,6 +13,9 @@ function getValue(formData: FormData, key: string) {
 }
 
 export async function POST(request: Request) {
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://cytocarepathlab.com";
+
   try {
     const formData = await request.formData();
 
@@ -26,12 +29,14 @@ export async function POST(request: Request) {
     const mihpayid = getValue(formData, "mihpayid");
     const mode = getValue(formData, "mode");
 
+    const additionalCharges =
+      getValue(formData, "additionalCharges") ||
+      getValue(formData, "additional_charges");
+
     const payuKey = process.env.PAYU_KEY || "";
     const payuSalt = process.env.PAYU_SALT || "";
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://cytocarepathlab.com";
 
     if (!payuKey || !payuSalt || !supabaseUrl || !serviceRoleKey) {
       return NextResponse.redirect(
@@ -40,7 +45,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const reverseHashString = `${payuSalt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payuKey}`;
+    const reverseHashString = additionalCharges
+      ? `${additionalCharges}|${payuSalt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payuKey}`
+      : `${payuSalt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payuKey}`;
+
     const calculatedHash = makeHash(reverseHashString);
 
     if (calculatedHash !== receivedHash) {
@@ -58,8 +66,9 @@ export async function POST(request: Request) {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    const now = new Date();
 
-    await supabaseAdmin
+    const { error: paidUpdateError } = await supabaseAdmin
       .from("cytocare_bookings")
       .update({
         payment_status: "Paid",
@@ -68,17 +77,124 @@ export async function POST(request: Request) {
         checkout_amount_paid: Number(amount) || 0,
         payment_reference: mihpayid || txnid,
         payment_mode: mode || "PayU",
-        updated_at: new Date().toISOString(),
+        updated_at: now.toISOString(),
       })
       .eq("checkout_group_key", txnid);
+
+    if (paidUpdateError) {
+      return NextResponse.redirect(
+        `${siteUrl}/patient-dashboard?payment=booking-update-error`,
+        303
+      );
+    }
+
+    const { data: membershipOrder, error: membershipOrderError } =
+      await supabaseAdmin
+        .from("cytocare_bookings")
+        .select("*")
+        .eq("checkout_group_key", txnid)
+        .eq("order_type", "elite_membership")
+        .limit(1)
+        .maybeSingle();
+
+    if (membershipOrderError) {
+      return NextResponse.redirect(
+        `${siteUrl}/patient-dashboard?payment=membership-search-error`,
+        303
+      );
+    }
+
+    if (membershipOrder) {
+      const membershipExpiresAt = new Date();
+      membershipExpiresAt.setDate(membershipExpiresAt.getDate() + 365);
+
+      const memberName =
+        membershipOrder.membership_member_name ||
+        membershipOrder.name ||
+        firstname ||
+        "Elite Member";
+
+      const memberPhone =
+        membershipOrder.membership_member_phone ||
+        membershipOrder.phone ||
+        "";
+
+      const memberRelation =
+        membershipOrder.membership_member_relation || "Self";
+
+      const { data: profile, error: profileFindError } = await supabaseAdmin
+        .from("patient_profiles")
+        .select("id, email")
+        .eq("email", membershipOrder.email)
+        .maybeSingle();
+
+      if (profileFindError || !profile?.id) {
+        return NextResponse.redirect(
+          `${siteUrl}/patient-dashboard?payment=profile-not-found`,
+          303
+        );
+      }
+
+      const { error: membershipUpdateError } = await supabaseAdmin
+        .from("patient_profiles")
+        .update({
+          membership_plan: "Cytocare Elite Membership - ₹89/year",
+          membership_status: "active",
+          membership_started_at: now.toISOString(),
+          membership_expires_at: membershipExpiresAt.toISOString(),
+          updated_at: now.toISOString(),
+        })
+        .eq("id", profile.id);
+
+      if (membershipUpdateError) {
+        return NextResponse.redirect(
+          `${siteUrl}/patient-dashboard?payment=membership-activation-error`,
+          303
+        );
+      }
+
+      const { data: existingMember } = await supabaseAdmin
+        .from("elite_family_members")
+        .select("id")
+        .eq("user_id", profile.id)
+        .eq("full_name", memberName)
+        .maybeSingle();
+
+      if (existingMember?.id) {
+        await supabaseAdmin
+          .from("elite_family_members")
+          .update({
+            phone: memberPhone || null,
+            relation: memberRelation,
+            is_active: true,
+            updated_at: now.toISOString(),
+          })
+          .eq("id", existingMember.id);
+      } else {
+        await supabaseAdmin.from("elite_family_members").insert({
+          user_id: profile.id,
+          full_name: memberName,
+          phone: memberPhone || null,
+          relation: memberRelation,
+          age: null,
+          gender: null,
+          is_active: true,
+          updated_at: now.toISOString(),
+        });
+      }
+
+      return NextResponse.redirect(
+        `${siteUrl}/patient-dashboard?payment=success&membership=active`,
+        303
+      );
+    }
 
     return NextResponse.redirect(
       `${siteUrl}/patient-dashboard?payment=success`,
       303
     );
-  } catch {
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://cytocarepathlab.com";
+  } catch (error) {
+    console.error("PayU success error:", error);
 
     return NextResponse.redirect(
       `${siteUrl}/patient-dashboard?payment=error`,
