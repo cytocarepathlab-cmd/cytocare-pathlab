@@ -20,6 +20,7 @@ import MembershipPlans from "@/components/home/MembershipPlans";
 import UnhealthyHabits from "@/components/home/UnhealthyHabits";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import LegalFooter from "@/components/layout/LegalFooter";
 import { FaCrown, FaTimes, FaUser, FaUserFriends } from "react-icons/fa";
 
 type PatientProfile = {
@@ -539,6 +540,7 @@ const updatedCart = [...cartItems, pendingTestName];
 
       <FloatingCall />
       <FloatingWhatsapp />
+       <LegalFooter />
 
       <BookingModal
         isOpen={isBookingOpen}

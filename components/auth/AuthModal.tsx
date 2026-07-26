@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { FaTimes } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 
 type AuthModalProps = {
   isOpen: boolean;
@@ -19,8 +20,31 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   if (!isOpen) return null;
+
+  async function handleGoogleLogin() {
+  try {
+    setGoogleLoading(true);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      alert(error.message);
+      setGoogleLoading(false);
+    }
+  } catch (error) {
+    console.error("Google login error:", error);
+    alert("Unable to continue with Google. Please try again.");
+    setGoogleLoading(false);
+  }
+}
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -85,13 +109,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
 
     if (data.session?.user) {
-      await supabase.from("patient_profiles").upsert({
-        id: data.session.user.id,
-        full_name: fullName.trim(),
-        phone,
-        email,
-        updated_at: new Date().toISOString(),
-      });
+      const { error: profileError } = await supabase
+        .from("patient_profiles")
+        .upsert({
+          id: data.session.user.id,
+          full_name: fullName.trim(),
+          phone,
+          email,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (profileError) {
+        console.error("Patient profile error:", profileError);
+      }
     }
 
     setLoading(false);
@@ -109,7 +139,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <div className="mb-7 flex items-start justify-between gap-5">
           <div>
             <h2 className="text-3xl font-extrabold text-[#07142f]">
-              {mode === "login" ? "Patient Login" : "Create Patient Account"}
+              {mode === "login"
+                ? "Patient Login"
+                : "Create Patient Account"}
             </h2>
 
             <p className="mt-2 text-slate-500">
@@ -122,12 +154,37 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-600"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200"
+            aria-label="Close login window"
           >
             <FaTimes />
           </button>
         </div>
 
+        {/* Google login button */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading || loading}
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white py-4 text-lg font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <FcGoogle className="text-2xl" />
+
+          {googleLoading ? "Connecting to Google..." : "Continue with Google"}
+        </button>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-4">
+          <div className="h-px flex-1 bg-slate-200" />
+
+          <span className="text-sm font-semibold uppercase text-slate-400">
+            Or
+          </span>
+
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        {/* Email and password form */}
         <form onSubmit={handleAuth} className="space-y-5">
           {mode === "signup" && (
             <>
@@ -141,11 +198,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               />
 
               <input
+                type="tel"
                 value={phone}
                 onChange={(e) =>
                   setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
                 }
                 placeholder="10 Digit Phone Number"
+                inputMode="numeric"
+                maxLength={10}
                 className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
                 required
               />
@@ -157,6 +217,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email Address"
+            autoComplete="email"
             className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
             required
           />
@@ -166,13 +227,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
+            autoComplete={
+              mode === "login" ? "current-password" : "new-password"
+            }
             className="w-full rounded-xl border border-slate-200 p-4 text-lg outline-none focus:border-[#0754dc]"
             required
           />
 
           <button
-            disabled={loading}
-            className="w-full rounded-xl bg-[#0754dc] py-4 text-lg font-bold text-white disabled:opacity-60"
+            type="submit"
+            disabled={loading || googleLoading}
+            className="w-full rounded-xl bg-[#0754dc] py-4 text-lg font-bold text-white transition hover:bg-[#0648bd] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading
               ? "Please wait..."
@@ -197,7 +262,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               onClick={() => setMode("login")}
               className="font-bold text-[#0754dc]"
             >
-              Already have account? Login
+              Already have an account? Login
             </button>
           )}
         </div>
