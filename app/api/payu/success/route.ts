@@ -88,14 +88,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: membershipOrder, error: membershipOrderError } =
+    const { data: membershipOrders, error: membershipOrderError } =
       await supabaseAdmin
         .from("cytocare_bookings")
         .select("*")
         .eq("checkout_group_key", txnid)
-        .eq("order_type", "elite_membership")
-        .limit(1)
-        .maybeSingle();
+        .or("order_type.eq.elite_membership,test_name.ilike.%elite membership%")
+        .limit(1);
 
     if (membershipOrderError) {
       return NextResponse.redirect(
@@ -103,6 +102,8 @@ export async function POST(request: Request) {
         303
       );
     }
+
+    const membershipOrder = membershipOrders?.[0] || null;
 
     if (membershipOrder) {
       const membershipExpiresAt = new Date();
@@ -122,10 +123,12 @@ export async function POST(request: Request) {
       const memberRelation =
         membershipOrder.membership_member_relation || "Self";
 
+      const profileEmail = membershipOrder.email || email;
+
       const { data: profile, error: profileFindError } = await supabaseAdmin
         .from("patient_profiles")
         .select("id, email")
-        .eq("email", membershipOrder.email)
+        .eq("email", profileEmail)
         .maybeSingle();
 
       if (profileFindError || !profile?.id) {
@@ -152,6 +155,14 @@ export async function POST(request: Request) {
           303
         );
       }
+
+      await supabaseAdmin
+        .from("cytocare_bookings")
+        .update({
+          order_type: "elite_membership",
+          updated_at: now.toISOString(),
+        })
+        .eq("id", membershipOrder.id);
 
       const { data: existingMember } = await supabaseAdmin
         .from("elite_family_members")

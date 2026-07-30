@@ -74,6 +74,7 @@ type TestBooking = {
   checkout_group_key?: string | null;
   checkout_total_payable?: number | null;
   checkout_amount_paid?: number | null;
+  order_type?: string | null;
 };
 
 type BookingGroup = {
@@ -155,6 +156,15 @@ function getBookingPayable(booking: TestBooking) {
 
 function getBookingPaid(booking: TestBooking) {
   return Number(booking.amount_paid ?? 0);
+}
+
+function isEliteMembershipBooking(booking: TestBooking) {
+  return (
+    booking.order_type === "elite_membership" ||
+    String(booking.test_name || "")
+      .toLowerCase()
+      .includes("elite membership")
+  );
 }
 
 function getBookingGroupKey(booking: TestBooking) {
@@ -537,7 +547,7 @@ export default function AdminPage() {
   const bookingGroups = useMemo(() => {
     const map = new Map<string, BookingGroup>();
 
-    bookings.forEach((booking) => {
+        actualTestBookings.forEach((booking) => {
       const groupId = getBookingGroupKey(booking);
 
       if (!map.has(groupId)) {
@@ -607,7 +617,7 @@ export default function AdminPage() {
           new Date(b.latestCreatedAt).getTime() -
           new Date(a.latestCreatedAt).getTime()
       );
-  }, [bookings]);
+    }, [actualTestBookings]);
 
   const filteredBookingGroups = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -678,19 +688,24 @@ export default function AdminPage() {
 
   const activeMembers = patients.filter((patient) => isActiveMember(patient));
   const normalUsers = patients.filter((patient) => !isActiveMember(patient));
-  const pendingBookings = bookings.filter(
+
+  const actualTestBookings = bookings.filter(
+    (booking) => !isEliteMembershipBooking(booking)
+  );
+
+  const pendingBookings = actualTestBookings.filter(
     (booking) => (booking.booking_status ?? "Pending") === "Pending"
   );
-  const confirmedBookings = bookings.filter(
+  const confirmedBookings = actualTestBookings.filter(
     (booking) => booking.booking_status === "Confirmed"
   );
-  const sampleCollectedBookings = bookings.filter(
+  const sampleCollectedBookings = actualTestBookings.filter(
     (booking) => booking.booking_status === "Sample Collected"
   );
-  const reportProcessingBookings = bookings.filter(
+  const reportProcessingBookings = actualTestBookings.filter(
     (booking) => booking.booking_status === "Report Processing"
   );
-  const reportDeliveredBookings = bookings.filter(
+  const reportDeliveredBookings = actualTestBookings.filter(
     (booking) => booking.booking_status === "Report Delivered"
   );
 
@@ -908,9 +923,9 @@ export default function AdminPage() {
                 color="bg-[#05a832]"
               />
 
-              <AdminStatCard
+                            <AdminStatCard
                 title="Total Tests Booked"
-                value={bookings.length}
+                value={actualTestBookings.length}
                 icon={<FaFlask />}
                 color="bg-[#e71935]"
               />
@@ -940,7 +955,7 @@ export default function AdminPage() {
                 </h2>
 
                 <div className="space-y-4">
-                  {bookings.slice(0, 5).map((booking) => (
+                                    {actualTestBookings.slice(0, 5).map((booking) => (
                     <div
                       key={booking.id}
                       className="rounded-2xl bg-[#f8fbff] p-5"
