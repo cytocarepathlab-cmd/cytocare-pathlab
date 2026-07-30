@@ -121,6 +121,33 @@ type DoctorConsultation = {
   updated_at: string | null;
 };
 
+type Prescription = {
+  id: string | number;
+  user_id: string | null;
+  patient_name: string;
+  patient_email: string;
+  patient_phone: string | null;
+  prescription_url: string;
+  file_name: string;
+  file_type: string | null;
+  notes: string | null;
+  prescription_status: string | null;
+  created_at: string;
+  updated_at: string | null;
+  expires_at: string | null;
+};
+
+type PrescriptionPatientGroup = {
+  patientKey: string;
+  userId: string | null;
+  patientName: string;
+  patientEmail: string;
+  patientPhone: string | null;
+  latestUpload: string;
+  prescriptions: Prescription[];
+};
+
+
 const bookingStatuses = [
   "Pending",
   "Confirmed",
@@ -192,7 +219,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "bookings" | "appointments" | "patients" | "clientBookings"
+    "overview" | "bookings" | "appointments" | "patients" | "prescriptions"| "clientBookings"
   >("overview");
 
   const [patients, setPatients] = useState<PatientProfile[]>([]);
@@ -201,6 +228,10 @@ export default function AdminPage() {
   >([]);
   const [bookings, setBookings] = useState<TestBooking[]>([]);
   const [appointments, setAppointments] = useState<DoctorConsultation[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+
+const [selectedPrescriptionPatientKey, setSelectedPrescriptionPatientKey] =
+  useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [openBookingGroupId, setOpenBookingGroupId] = useState<string | null>(
@@ -325,6 +356,17 @@ export default function AdminPage() {
     } else {
       setAppointments((appointmentsData ?? []) as DoctorConsultation[]);
     }
+const { data: prescriptionsData, error: prescriptionsError } = await supabase
+  .from("cytocare_prescriptions")
+  .select("*")
+  .order("created_at", { ascending: false });
+
+if (prescriptionsError) {
+  console.error("Prescriptions error:", prescriptionsError);
+  alert(prescriptionsError.message);
+} else {
+  setPrescriptions((prescriptionsData ?? []) as Prescription[]);
+}
   }
 
   async function logoutAdmin() {
@@ -714,7 +756,73 @@ export default function AdminPage() {
     );
   }, [patients, search]);
 
-  
+  const prescriptionPatientGroups = useMemo(() => {
+  const q = search.toLowerCase().trim();
+  const patientMap = new Map<string, PrescriptionPatientGroup>();
+
+  prescriptions.forEach((prescription) => {
+    const patientKey =
+      prescription.user_id ||
+      prescription.patient_email?.toLowerCase() ||
+      String(prescription.id);
+
+    if (!patientMap.has(patientKey)) {
+      patientMap.set(patientKey, {
+        patientKey,
+        userId: prescription.user_id,
+        patientName: prescription.patient_name || "Unnamed Patient",
+        patientEmail: prescription.patient_email || "",
+        patientPhone: prescription.patient_phone,
+        latestUpload: prescription.created_at,
+        prescriptions: [],
+      });
+    }
+
+    const group = patientMap.get(patientKey)!;
+
+    group.prescriptions.push(prescription);
+
+    if (
+      new Date(prescription.created_at).getTime() >
+      new Date(group.latestUpload).getTime()
+    ) {
+      group.latestUpload = prescription.created_at;
+    }
+  });
+
+  return Array.from(patientMap.values())
+    .filter((group) => {
+      if (!q) return true;
+
+      const searchableText = [
+        group.patientName,
+        group.patientEmail,
+        group.patientPhone || "",
+        group.prescriptions
+          .map((prescription) => prescription.file_name)
+          .join(" "),
+        group.prescriptions
+          .map((prescription) => prescription.notes || "")
+          .join(" "),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(q);
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.latestUpload).getTime() -
+        new Date(a.latestUpload).getTime()
+    );
+}, [prescriptions, search]);
+
+const selectedPrescriptionPatient =
+  prescriptionPatientGroups.find(
+    (group) => group.patientKey === selectedPrescriptionPatientKey
+  ) ??
+  prescriptionPatientGroups[0] ??
+  null;
 
   if (loading) {
     return (
@@ -867,6 +975,19 @@ export default function AdminPage() {
           >
             Patients
           </button>
+
+<button
+  type="button"
+  onClick={() => setActiveTab("prescriptions")}
+  className={`flex items-center gap-2 rounded-2xl px-6 py-4 text-lg font-bold shadow-sm ${
+    activeTab === "prescriptions"
+      ? "bg-[#0754dc] text-white"
+      : "bg-white text-[#07142f]"
+  }`}
+>
+  <FaFileMedical />
+  Prescriptions
+</button>
 
           <button
             type="button"
@@ -1527,6 +1648,260 @@ export default function AdminPage() {
             )}
           </div>
         )}
+
+{activeTab === "prescriptions" && (
+  <div className="grid gap-7 xl:grid-cols-[380px_1fr]">
+    {/* Patient list */}
+    <div className="self-start rounded-3xl bg-white p-5 shadow-md xl:sticky xl:top-32">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-extrabold uppercase text-[#0754dc]">
+            Prescription Patients
+          </p>
+
+          <h2 className="mt-1 text-2xl font-extrabold">
+            Select Patient
+          </h2>
+        </div>
+
+        <span className="rounded-full bg-[#eef5ff] px-4 py-2 text-sm font-extrabold text-[#0754dc]">
+          {prescriptionPatientGroups.length}
+        </span>
+      </div>
+
+      {prescriptionPatientGroups.length === 0 ? (
+        <div className="rounded-2xl bg-[#f8fbff] p-5 text-center">
+          <FaFileMedical className="mx-auto text-4xl text-slate-300" />
+
+          <p className="mt-3 font-extrabold">
+            No prescriptions uploaded
+          </p>
+
+          <p className="mt-1 text-sm font-semibold text-slate-500">
+            Patient prescriptions will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="max-h-[650px] space-y-3 overflow-y-auto pr-1">
+          {prescriptionPatientGroups.map((group) => {
+            const isSelected =
+              selectedPrescriptionPatient?.patientKey === group.patientKey;
+
+            return (
+              <button
+                key={group.patientKey}
+                type="button"
+                onClick={() =>
+                  setSelectedPrescriptionPatientKey(group.patientKey)
+                }
+                className={`w-full rounded-2xl border p-4 text-left transition ${
+                  isSelected
+                    ? "border-[#0754dc] bg-[#eef5ff] shadow-sm"
+                    : "border-slate-100 bg-[#f8fbff] hover:border-[#0754dc]/40"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-extrabold text-[#07142f]">
+                      {group.patientName}
+                    </p>
+
+                    <p className="mt-1 truncate text-sm font-semibold text-slate-500">
+                      {group.patientPhone || "Phone not saved"}
+                    </p>
+
+                    <p className="truncate text-sm font-semibold text-slate-500">
+                      {group.patientEmail}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-extrabold ${
+                      isSelected
+                        ? "bg-[#0754dc] text-white"
+                        : "bg-white text-[#0754dc]"
+                    }`}
+                  >
+                    {group.prescriptions.length}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-200/70 pt-3">
+                  <span className="text-xs font-bold text-slate-500">
+                    Latest upload
+                  </span>
+
+                  <span className="text-xs font-extrabold text-[#07142f]">
+                    {formatDate(group.latestUpload)}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+
+    {/* Selected patient prescriptions */}
+    <div>
+      {!selectedPrescriptionPatient ? (
+        <EmptyState title="Select a patient to view prescriptions" />
+      ) : (
+        <div className="space-y-6">
+          <div className="rounded-3xl bg-white p-7 shadow-md">
+            <div className="flex flex-wrap items-start justify-between gap-5">
+              <div>
+                <p className="font-extrabold uppercase text-[#0754dc]">
+                  Selected Patient
+                </p>
+
+                <h2 className="mt-2 text-3xl font-extrabold">
+                  {selectedPrescriptionPatient.patientName}
+                </h2>
+
+                <div className="mt-3 space-y-1 text-sm font-semibold text-slate-500">
+                  <p>
+                    Phone:{" "}
+                    {selectedPrescriptionPatient.patientPhone ||
+                      "Not saved"}
+                  </p>
+
+                  <p className="break-all">
+                    Email: {selectedPrescriptionPatient.patientEmail}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-[#eef5ff] px-5 py-4 text-center">
+                <p className="text-xs font-extrabold uppercase text-slate-500">
+                  Total Prescriptions
+                </p>
+
+                <p className="mt-1 text-3xl font-extrabold text-[#0754dc]">
+                  {selectedPrescriptionPatient.prescriptions.length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {selectedPrescriptionPatient.prescriptions.map(
+            (prescription, index) => {
+              const isImage =
+                prescription.file_type?.startsWith("image/") ||
+                /\.(jpg|jpeg|png|webp)$/i.test(
+                  prescription.file_name || ""
+                );
+
+              const isPdf =
+                prescription.file_type === "application/pdf" ||
+                /\.pdf$/i.test(prescription.file_name || "");
+
+              return (
+                <div
+                  key={prescription.id}
+                  className="overflow-hidden rounded-3xl bg-white shadow-md"
+                >
+                  <div className="border-b border-slate-100 p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-extrabold uppercase text-[#0754dc]">
+                          Prescription {index + 1}
+                        </p>
+
+                        <h3 className="mt-2 break-all text-xl font-extrabold">
+                          {prescription.file_name}
+                        </h3>
+
+                        <div className="mt-3 flex flex-wrap gap-3">
+                          <span className="flex items-center gap-2 rounded-full bg-[#eef5ff] px-4 py-2 text-sm font-bold text-[#0754dc]">
+                            <FaCalendarAlt />
+                            Uploaded:{" "}
+                            {formatDateTime(prescription.created_at)}
+                          </span>
+
+                          <span className="rounded-full bg-[#fff7df] px-4 py-2 text-sm font-bold text-[#9a6500]">
+                            {prescription.prescription_status || "New"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <a
+                        href={prescription.prescription_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#0754dc] px-5 py-3 font-extrabold text-white"
+                      >
+                        <FaFileMedical />
+                        Open Full Prescription
+                      </a>
+                    </div>
+
+                    {prescription.notes && (
+                      <div className="mt-5 rounded-2xl bg-[#f8fbff] p-5">
+                        <p className="text-sm font-extrabold text-slate-500">
+                          Patient Notes
+                        </p>
+
+                        <p className="mt-2 whitespace-pre-wrap font-semibold text-[#07142f]">
+                          {prescription.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-[#f8fbff] p-5">
+                    {isImage && (
+                      <div className="flex min-h-[400px] items-center justify-center overflow-hidden rounded-2xl bg-white p-4">
+                        <img
+                          src={prescription.prescription_url}
+                          alt={`Prescription uploaded by ${selectedPrescriptionPatient.patientName}`}
+                          className="max-h-[750px] w-auto max-w-full rounded-xl object-contain"
+                        />
+                      </div>
+                    )}
+
+                    {isPdf && (
+                      <div className="overflow-hidden rounded-2xl bg-white">
+                        <iframe
+                          src={prescription.prescription_url}
+                          title={`Prescription ${index + 1}`}
+                          className="h-[700px] w-full border-0"
+                        />
+                      </div>
+                    )}
+
+                    {!isImage && !isPdf && (
+                      <div className="rounded-2xl bg-white p-10 text-center">
+                        <FaFileMedical className="mx-auto text-6xl text-[#0754dc]" />
+
+                        <p className="mt-4 text-xl font-extrabold">
+                          Preview is not available
+                        </p>
+
+                        <p className="mt-2 text-slate-500">
+                          Open the file to view this prescription.
+                        </p>
+
+                        <a
+                          href={prescription.prescription_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-5 inline-flex rounded-xl bg-[#0754dc] px-6 py-3 font-extrabold text-white"
+                        >
+                          Open Prescription
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
         {activeTab === "clientBookings" && <ClientBookingsSection />}
       </section>
