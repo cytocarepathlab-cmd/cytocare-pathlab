@@ -544,6 +544,34 @@ export default function AdminPage() {
     );
   }
 
+     const map = new Map<string, BookingGroup>();
+  const activeMembers = patients.filter((patient) => isActiveMember(patient));
+  const normalUsers = patients.filter((patient) => !isActiveMember(patient));
+
+  const actualTestBookings = bookings.filter(
+    (booking) => !isEliteMembershipBooking(booking)
+  );
+
+  const pendingBookings = actualTestBookings.filter(
+    (booking) => (booking.booking_status ?? "Pending") === "Pending"
+  );
+
+  const confirmedBookings = actualTestBookings.filter(
+    (booking) => booking.booking_status === "Confirmed"
+  );
+
+  const sampleCollectedBookings = actualTestBookings.filter(
+    (booking) => booking.booking_status === "Sample Collected"
+  );
+
+  const reportProcessingBookings = actualTestBookings.filter(
+    (booking) => booking.booking_status === "Report Processing"
+  );
+
+  const reportDeliveredBookings = actualTestBookings.filter(
+    (booking) => booking.booking_status === "Report Delivered"
+  );
+
   const bookingGroups = useMemo(() => {
     const map = new Map<string, BookingGroup>();
 
@@ -686,28 +714,7 @@ export default function AdminPage() {
     );
   }, [patients, search]);
 
-  const activeMembers = patients.filter((patient) => isActiveMember(patient));
-  const normalUsers = patients.filter((patient) => !isActiveMember(patient));
-
-  const actualTestBookings = bookings.filter(
-    (booking) => !isEliteMembershipBooking(booking)
-  );
-
-  const pendingBookings = actualTestBookings.filter(
-    (booking) => (booking.booking_status ?? "Pending") === "Pending"
-  );
-  const confirmedBookings = actualTestBookings.filter(
-    (booking) => booking.booking_status === "Confirmed"
-  );
-  const sampleCollectedBookings = actualTestBookings.filter(
-    (booking) => booking.booking_status === "Sample Collected"
-  );
-  const reportProcessingBookings = actualTestBookings.filter(
-    (booking) => booking.booking_status === "Report Processing"
-  );
-  const reportDeliveredBookings = actualTestBookings.filter(
-    (booking) => booking.booking_status === "Report Delivered"
-  );
+  
 
   if (loading) {
     return (
