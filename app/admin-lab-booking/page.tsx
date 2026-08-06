@@ -15,15 +15,13 @@ import {
 type PatientProfile = {
   id?: string;
   full_name?: string;
-  name?: string;
   email?: string;
   phone?: string;
-  address?: string;
+  last_address?: string | null;
   membership_status?: string;
   membership_plan?: string;
   membership_expires_at?: string | null;
 };
-
 type SelectedTest = {
   name: string;
   price: number;
@@ -97,12 +95,14 @@ export default function AdminLabBookingPage() {
     setMessage("");
 
     const { data, error } = await supabase
-      .from("patient_profiles")
-      .select("*")
-      .or(
-        `full_name.ilike.%${query}%,name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`
-      )
-      .limit(20);
+  .from("patient_profiles")
+  .select(
+    "id, full_name, email, phone, last_address, membership_status, membership_plan, membership_expires_at"
+  )
+  .or(
+    `full_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`
+  )
+  .limit(20);
 
     setSearching(false);
 
@@ -161,53 +161,64 @@ export default function AdminLabBookingPage() {
     const patientEmail = selectedPatient.email || "";
     const patientPhone = selectedPatient.phone || "";
     const mainPatientName =
-      selectedPatient.full_name || selectedPatient.name || patientForTest.trim();
+  selectedPatient.full_name || patientForTest.trim();
 
     const rows = selectedTests.map((test, index) => {
-      const individualDiscount = eliteActive
-        ? Math.round(test.price * 0.1)
+  const individualDiscount = eliteActive
+    ? Math.round(test.price * 0.1)
+    : 0;
+
+  const individualFinal = Math.max(
+    test.price - individualDiscount,
+    0
+  );
+
+  const allocatedPaid =
+    selectedTests.length === 1
+      ? paid
+      : index === 0
+        ? paid
         : 0;
 
-      const individualFinal = Math.max(test.price - individualDiscount, 0);
+  return {
+    name: mainPatientName,
+    phone: patientPhone,
+    email: patientEmail,
+    address: selectedPatient.last_address || "",
 
-      return {
-        name: mainPatientName,
-        phone: patientPhone,
-        email: patientEmail,
-        address: selectedPatient.address || "",
-        test_name: test.name,
-        date: bookingDate,
-        time: "Lab Visit",
-        slot: "Lab Visit",
-        location: "Lab Visit",
-        notes: `Booked by admin from lab. PCode: ${accessionNumber.trim()}`,
+    test_name: test.name,
+    test_for_name: patientForTest.trim(),
+    test_for_type: relation,
 
-        booking_source: "lab_admin",
-        booked_by_admin: true,
-        family_member_name: patientForTest.trim(),
-        family_member_relation: relation,
-        accession_number: accessionNumber.trim(),
-        software_pcode: accessionNumber.trim(),
+    booking_date: bookingDate,
+    booking_time: "Lab Visit",
+    booking_type: "Lab Visit",
 
-        reference_number:
-          selectedTests.length === 1
-            ? accessionNumber.trim()
-            : `${accessionNumber.trim()}-${index + 1}`,
+    booking_status: "Confirmed",
+    payment_status: balance <= 0 ? "Paid" : "Pending",
+    report_status: "Not Uploaded",
 
-        checkout_group_key: checkoutGroupKey,
-        checkout_total_payable: finalAmount,
-        checkout_amount_paid: paid,
-        amount_paid: selectedTests.length === 1 ? paid : 0,
+    test_total: test.price,
+    final_payable: individualFinal,
+    amount_paid: allocatedPaid,
 
-        total_amount: test.price,
-        discount_amount: individualDiscount,
-        final_amount: individualFinal,
+    checkout_group_key: checkoutGroupKey,
+    checkout_total_payable: finalAmount,
+    checkout_amount_paid: paid,
 
-        payment_status: balance <= 0 ? "Paid" : "Pending",
-        booking_status: "Booking Confirmed",
-        report_status: "Not Uploaded",
-      };
-    });
+    admin_notes: `Booked by admin from lab. Accession number: ${accessionNumber.trim()}`,
+
+    accession_number: accessionNumber.trim(),
+    software_pcode: accessionNumber.trim(),
+
+    reference_number:
+      selectedTests.length === 1
+        ? accessionNumber.trim()
+        : `${accessionNumber.trim()}-${index + 1}`,
+
+    order_type: "lab_booking",
+  };
+});
 
     const { error } = await supabase.from("cytocare_bookings").insert(rows);
 
@@ -285,7 +296,7 @@ export default function AdminLabBookingPage() {
                       onClick={() => {
                         setSelectedPatient(patient);
                         setPatientForTest(
-                          patient.full_name || patient.name || ""
+                          patient.full_name || ""
                         );
                         setRelation("Self");
                       }}
@@ -299,7 +310,7 @@ export default function AdminLabBookingPage() {
                         <div>
                           <p className="flex items-center gap-2 text-lg font-extrabold text-[#07142f]">
                             <FaUser className="text-[#0754dc]" />
-                            {patient.full_name || patient.name || "Unnamed Patient"}
+                            {patient.full_name || "Unnamed Patient"}
                           </p>
 
                           <p className="mt-2 text-sm font-semibold text-slate-600">
@@ -444,7 +455,7 @@ export default function AdminLabBookingPage() {
                     Registered Account
                   </p>
                   <p className="mt-1 font-extrabold text-[#07142f]">
-                    {selectedPatient.full_name || selectedPatient.name}
+                    {selectedPatient.full_name || "Unnamed Patient"}
                   </p>
                   <p className="text-sm font-semibold text-slate-600">
                     {selectedPatient.email}
