@@ -50,6 +50,19 @@ type CartAssignment = {
 };
 
 type CytocareTest = (typeof cytocareTests)[number];
+console.log("TOTAL CYTOCARE TESTS:", cytocareTests.length);
+console.log(
+  "SMALL BIOPSY FOUND:",
+  cytocareTests.some((test) =>
+    test.name.toLowerCase().includes("small biopsy")
+  )
+);
+console.log(
+  "NIPT FOUND:",
+  cytocareTests.some((test) =>
+    test.name.toLowerCase().includes("nipt")
+  )
+);
 
 export default function AllTestsPage() {
   const [user, setUser] = useState<User | null>(null);
