@@ -11,6 +11,7 @@ import {
   FaSave,
   FaSearch,
   FaTimes,
+  FaTrash,
   FaUserShield,
   FaVial,
 } from "react-icons/fa";
@@ -203,6 +204,30 @@ export default function AdminClientPricesPage() {
     setSavingId("");
     cancelEdit();
   }
+
+async function deleteTest(testId: string, productName: string) {
+  const confirmed = window.confirm(
+    `Delete "${productName}"?\n\nThis test will be permanently removed from the price list.`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("cytocare_client_price_list")
+    .delete()
+    .eq("id", testId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  setPrices((prev) =>
+    prev.filter((item) => item.id !== testId)
+  );
+}
 
   async function addNewTest() {
     if (!newTest.product.trim()) {
@@ -579,14 +604,32 @@ export default function AdminClientPricesPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => startEdit(item)}
-                      className="flex items-center gap-3 rounded-xl bg-[#0754dc] px-5 py-3 font-extrabold text-white"
-                    >
-                      <FaEdit />
-                      Edit
-                    </button>
+                   <div className="flex flex-wrap gap-3">
+
+  <button
+    type="button"
+    onClick={() => startEdit(item)}
+    className="flex items-center gap-3 rounded-xl bg-[#0754dc] px-5 py-3 font-extrabold text-white"
+  >
+    <FaEdit />
+    Edit
+  </button>
+
+  <button
+    type="button"
+    onClick={() =>
+      deleteTest(
+        item.id,
+        item.product
+      )
+    }
+    className="flex items-center gap-3 rounded-xl bg-[#e71935] px-5 py-3 font-extrabold text-white"
+  >
+    <FaTrash />
+    Delete
+  </button>
+
+</div>
                   </div>
                 ) : (
                   <div>
