@@ -652,6 +652,12 @@ export default function AdminClientsPage() {
                           >
                             <FaEdit />
                             Edit Client / Login
+                            <Link
+  href="/admin-client-mrp"
+  className="mt-3 ml-3 inline-flex items-center gap-3 rounded-xl bg-[#f59e0b] px-5 py-3 font-extrabold text-white"
+>
+  Edit Client MRP
+</Link>
                           </button>
 
                         </div>
