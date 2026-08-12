@@ -32,6 +32,7 @@ type CytocareClient = {
   status: "active" | "blocked";
   credit_limit: number;
   unpaid_due: number;
+  show_client_rate: boolean;
   blocked_due_amount: number;
   paid_after_block: number;
   minimum_reopen_payment: number;
@@ -74,6 +75,8 @@ export default function AdminClientsPage() {
   const [paymentNotes, setPaymentNotes] = useState<Record<string, string>>({});
 
   const [savingClientId, setSavingClientId] = useState("");
+  const [changingRateVisibilityId, setChangingRateVisibilityId] =
+  useState("");
 
   // ============================
   // EDIT CLIENT STATES
@@ -347,7 +350,40 @@ export default function AdminClientsPage() {
   // ============================
   // LOADING
   // ============================
+async function toggleClientRateVisibility(
+  client: CytocareClient
+) {
+  const newValue = !(client.show_client_rate ?? true);
 
+  setChangingRateVisibilityId(client.id);
+
+  const { error } = await supabase
+    .from("cytocare_clients")
+    .update({
+      show_client_rate: newValue,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", client.id);
+
+  if (error) {
+    setChangingRateVisibilityId("");
+    alert(error.message);
+    return;
+  }
+
+  setClients((prev) =>
+    prev.map((item) =>
+      item.id === client.id
+        ? {
+            ...item,
+            show_client_rate: newValue,
+          }
+        : item
+    )
+  );
+
+  setChangingRateVisibilityId("");
+}
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f5f9ff]">
@@ -659,6 +695,27 @@ export default function AdminClientsPage() {
   Edit Client MRP
 </Link>
                           </button>
+
+<button
+  type="button"
+  onClick={() =>
+    toggleClientRateVisibility(client)
+  }
+  disabled={
+    changingRateVisibilityId === client.id
+  }
+  className={`rounded-xl px-5 py-3 font-extrabold text-white transition ${
+    client.show_client_rate ?? true
+      ? "bg-[#05a832]"
+      : "bg-[#e71935]"
+  } disabled:bg-slate-300`}
+>
+  {changingRateVisibilityId === client.id
+    ? "Updating..."
+    : client.show_client_rate ?? true
+      ? "Client Rate: ENABLED"
+      : "Client Rate: DISABLED"}
+</button>
 
                         </div>
 

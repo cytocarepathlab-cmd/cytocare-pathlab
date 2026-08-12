@@ -23,6 +23,7 @@ type ClientProfile = {
   name?: string | null;
   lab_name?: string | null;
   client_code?: string | null;
+  show_client_rate?: boolean;
   phone?: string | null;
   mobile?: string | null;
 };
@@ -660,7 +661,13 @@ function sendReportOnWhatsapp(report: ClientReport) {
                         <th className="px-5 py-4">Test Name</th>
                         <th className="px-5 py-4">Category</th>
                         <th className="px-5 py-4">Vial</th>
-                        <th className="px-5 py-4">Client Rate</th>
+                        {client.show_client_rate !== false && (
+  <th
+    className="px-5 py-5 text-left"
+  >
+    Client Rate
+  </th>
+)}
                         <th className="px-5 py-4">MRP</th>
                         <th className="px-5 py-4">Reporting Time</th>
                       </tr>
@@ -684,9 +691,11 @@ function sendReportOnWhatsapp(report: ClientReport) {
                             {item.vials || "Not added"}
                           </td>
 
-                          <td className="px-5 py-4 text-lg font-extrabold text-[#0754dc]">
-                            {rupees(item.clientRate)}
-                          </td>
+                          {client.show_client_rate !== false && (
+  <td className="px-5 py-5 font-extrabold text-[#0754dc]">
+    {rupees(item.clientRate)}
+  </td>
+)}
 
                           <td className="px-5 py-4 text-lg font-extrabold text-[#07142f]">
                             {rupees(item.mrp)}
