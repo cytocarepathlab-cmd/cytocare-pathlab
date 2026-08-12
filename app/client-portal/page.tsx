@@ -14,6 +14,7 @@ import {
   FaUser,
   FaDownload,
 FaWhatsapp,
+FaShareAlt,
 } from "react-icons/fa";
 import { supabase } from "@/lib/supabase";
 
@@ -81,6 +82,117 @@ export default function ClientPortalPage() {
       clientData.name ||
       "Client"
     );
+  }
+
+  async function downloadAndOpenReport(report: ClientReport) {
+    try {
+      const previewWindow = window.open("", "_blank");
+
+      const response = await fetch(
+        `/api/download-report?url=${encodeURIComponent(
+          report.report_url
+        )}&name=${encodeURIComponent(
+          report.file_name
+        )}`
+      );
+
+      if (!response.ok) {
+        previewWindow?.close();
+        throw new Error("Unable to download report.");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const downloadLink = document.createElement("a");
+      downloadLink.href = blobUrl;
+      downloadLink.download =
+        report.file_name || "cytocare-report.pdf";
+
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+
+      if (previewWindow) {
+        previewWindow.location.href = blobUrl;
+      } else {
+        window.open(blobUrl, "_blank");
+      }
+
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 60000);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to download report."
+      );
+    }
+  }
+
+  async function shareReport(report: ClientReport) {
+    try {
+      const response = await fetch(
+        `/api/download-report?url=${encodeURIComponent(
+          report.report_url
+        )}&name=${encodeURIComponent(
+          report.file_name
+        )}`
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Unable to prepare report for sharing."
+        );
+      }
+
+      const blob = await response.blob();
+
+      const fileName =
+        report.file_name || "cytocare-report.pdf";
+
+      const pdfFile = new File(
+        [blob],
+        fileName,
+        {
+          type: "application/pdf",
+        }
+      );
+
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({
+          files: [pdfFile],
+        })
+      ) {
+        await navigator.share({
+          files: [pdfFile],
+          title: "CytoCare Path Lab Report",
+          text: "CytoCare Path Lab - Patient Report",
+        });
+
+        return;
+      }
+
+      alert(
+        "Direct PDF sharing is not supported on this device/browser. Please download the report and share it from your phone."
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to share report."
+      );
+    }
   }
 
   function rupees(value: number | null | undefined) {
@@ -602,7 +714,7 @@ function sendReportOnWhatsapp(report: ClientReport) {
 
                 <div className="mt-6 grid gap-3">
 
-  {/* OPEN REPORT */}
+  {/* VIEW PDF */}
   <a
     href={report.report_url}
     target="_blank"
@@ -613,21 +725,31 @@ function sendReportOnWhatsapp(report: ClientReport) {
     View PDF
   </a>
 
-  {/* DIRECT DOWNLOAD */}
-  <a
-    href={`/api/download-report?url=${encodeURIComponent(
-      report.report_url
-    )}&name=${encodeURIComponent(
-      report.file_name
-    )}`}
+  {/* DOWNLOAD + OPEN */}
+  <button
+    type="button"
+    onClick={() =>
+      downloadAndOpenReport(report)
+    }
     className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#05a832] px-5 py-4 font-extrabold text-white"
   >
     <FaDownload />
-    Download to Device
-  </a>
+    Download & Open
+  </button>
+
+  {/* SHARE PDF */}
+  <button
+    type="button"
+    onClick={() =>
+      shareReport(report)
+    }
+    className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#07142f] px-5 py-4 font-extrabold text-white"
+  >
+    <FaShareAlt />
+    Share PDF
+  </button>
 
 </div>
-
               </div>
             )
           )}
