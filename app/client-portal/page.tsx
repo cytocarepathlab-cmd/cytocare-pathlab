@@ -600,17 +600,33 @@ function sendReportOnWhatsapp(report: ClientReport) {
                   </p>
                 )}
 
-                <a
-                  href={
-                    report.report_url
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-[#0754dc] px-5 py-4 font-extrabold text-white"
-                >
-                  <FaDownload />
-                  View / Download PDF
-                </a>
+                <div className="mt-6 grid gap-3">
+
+  {/* OPEN REPORT */}
+  <a
+    href={report.report_url}
+    target="_blank"
+    rel="noreferrer"
+    className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#0754dc] px-5 py-4 font-extrabold text-white"
+  >
+    <FaFileMedical />
+    View PDF
+  </a>
+
+  {/* DIRECT DOWNLOAD */}
+  <a
+    href={`/api/download-report?url=${encodeURIComponent(
+      report.report_url
+    )}&name=${encodeURIComponent(
+      report.file_name
+    )}`}
+    className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#05a832] px-5 py-4 font-extrabold text-white"
+  >
+    <FaDownload />
+    Download to Device
+  </a>
+
+</div>
 
               </div>
             )
