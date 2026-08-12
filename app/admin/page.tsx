@@ -21,7 +21,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import AuthModal from "@/components/auth/AuthModal";
-import ClientBookingsSection from "@/components/admin/ClientBookingsSection";
+import ClientReportUploadsSection from "@/components/admin/ClientReportUploadsSection";
 
 type PatientProfile = {
   id: string;
@@ -219,7 +219,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "bookings" | "appointments" | "patients" | "prescriptions"| "clientBookings"
+    "overview" | "bookings" | "appointments" | "patients" | "prescriptions"| "Client Report Uploads"
   >("overview");
 
   const [patients, setPatients] = useState<PatientProfile[]>([]);
@@ -241,7 +241,22 @@ const [selectedPrescriptionPatientKey, setSelectedPrescriptionPatientKey] =
     Record<string, string>
   >({});
   const [savingGroupId, setSavingGroupId] = useState<string | null>(null);
+  const [groupReportFiles, setGroupReportFiles] =
+  useState<Record<string, File | null>>({});
 
+const [uploadingGroupReportId, setUploadingGroupReportId] =
+  useState<string | null>(null);
+
+const [groupReportMessages, setGroupReportMessages] =
+  useState<
+    Record<
+      string,
+      {
+        type: "success" | "error";
+        message: string;
+      }
+    >
+  >({});
   useEffect(() => {
     async function checkAdmin() {
       const { data } = await supabase.auth.getUser();
@@ -824,7 +839,126 @@ const selectedPrescriptionPatient =
   prescriptionPatientGroups[0] ??
   null;
 
-  if (loading) {
+async function uploadPatientGroupReport(group: BookingGroup) {
+  const file = groupReportFiles[group.groupId];
+
+  if (!file) {
+    alert("Please select the patient's PDF report first.");
+    return;
+  }
+
+  if (
+    file.type !== "application/pdf" &&
+    !file.name.toLowerCase().endsWith(".pdf")
+  ) {
+    alert("Please select a PDF file.");
+    return;
+  }
+
+  setUploadingGroupReportId(group.groupId);
+
+  setGroupReportMessages((prev) => ({
+    ...prev,
+    [group.groupId]: {
+      type: "success",
+      message: "Uploading report to Cloudflare...",
+    },
+  }));
+
+  try {
+    const { data: sessionData } =
+      await supabase.auth.getSession();
+
+    const token =
+      sessionData.session?.access_token;
+
+    if (!token) {
+      throw new Error("Admin session not found.");
+    }
+
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    formData.append(
+      "bookingIds",
+      JSON.stringify(
+        group.bookings.map((booking) => booking.id)
+      )
+    );
+
+    formData.append(
+      "patientName",
+      group.patientName
+    );
+
+    const response = await fetch(
+      "/api/upload-patient-report",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Report upload failed."
+      );
+    }
+
+    const bookingIds = group.bookings.map(
+      (booking) => booking.id
+    );
+
+    setBookings((prev) =>
+      prev.map((booking) =>
+        bookingIds.includes(booking.id)
+          ? {
+              ...booking,
+              report_url: result.reportUrl,
+              report_status: "Report Ready",
+              updated_at: new Date().toISOString(),
+            }
+          : booking
+      )
+    );
+
+    setGroupReportFiles((prev) => ({
+      ...prev,
+      [group.groupId]: null,
+    }));
+
+    setGroupReportMessages((prev) => ({
+      ...prev,
+      [group.groupId]: {
+        type: "success",
+        message: "Patient report uploaded successfully.",
+      },
+    }));
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Report upload failed.";
+
+    setGroupReportMessages((prev) => ({
+      ...prev,
+      [group.groupId]: {
+        type: "error",
+        message,
+      },
+    }));
+  }
+
+  setUploadingGroupReportId(null);
+}
+
+if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f5f9ff]">
         <div className="rounded-3xl bg-white p-10 text-center shadow-xl">
@@ -991,14 +1125,14 @@ const selectedPrescriptionPatient =
 
           <button
             type="button"
-            onClick={() => setActiveTab("clientBookings")}
+            onClick={() => setActiveTab("Client Report Uploads")}
             className={`rounded-2xl px-6 py-4 text-lg font-bold shadow-sm transition ${
-              activeTab === "clientBookings"
+              activeTab === "Client Report Uploads"
                 ? "bg-[#0754dc] text-white"
                 : "bg-white text-[#07142f]"
             }`}
           >
-            Client Bookings
+            Client Report Uploads
           </button>
           <Link
   href="/admin-software-upload"
@@ -1359,9 +1493,10 @@ const selectedPrescriptionPatient =
                   {isOpen && (
                     <div className="mt-6 rounded-3xl border border-slate-100 bg-[#f8fbff] p-6">
                       <h3 className="mb-5 text-2xl font-extrabold">
-                        Tests & Report PDFs
+                        Tests & Report PDF
                       </h3>
 
+                      {/* TESTS STAY VISIBLE, BUT NO SEPARATE PDF UPLOADER PER TEST */}
                       <div className="space-y-4">
                         {group.bookings.map((booking) => {
                           const payable = getBookingPayable(booking);
@@ -1373,7 +1508,7 @@ const selectedPrescriptionPatient =
                               key={booking.id}
                               className="rounded-2xl bg-white p-5 shadow-sm"
                             >
-                              <div className="grid gap-5 xl:grid-cols-[1fr_0.9fr_1.2fr]">
+                              <div className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
                                 <div>
                                   <p className="text-xs font-extrabold text-[#0754dc]">
                                     Booking #{booking.id}
@@ -1404,44 +1539,131 @@ const selectedPrescriptionPatient =
                                     tone={pending > 0 ? "red" : "green"}
                                   />
                                 </div>
-
-                                <div>
-                                  <label className="mb-2 block text-sm font-bold text-slate-500">
-                                    Report PDF URL / Link
-                                  </label>
-
-                                  <input
-                                    value={booking.report_url ?? ""}
-                                    onChange={(e) =>
-                                      updateBookingField(
-                                        booking.id,
-                                        "report_url",
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="Paste report PDF link for this test"
-                                    className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none focus:border-[#0754dc]"
-                                  />
-
-                                  {booking.report_url ? (
-                                    <a
-                                      href={booking.report_url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="mt-3 inline-flex rounded-xl bg-[#05a832] px-4 py-3 text-sm font-extrabold text-white"
-                                    >
-                                      Open PDF
-                                    </a>
-                                  ) : (
-                                    <p className="mt-3 rounded-xl bg-[#fff8df] p-3 text-xs font-bold text-[#7a4f00]">
-                                      No PDF added yet for this test.
-                                    </p>
-                                  )}
-                                </div>
                               </div>
                             </div>
                           );
                         })}
+                      </div>
+
+                      {/* ONE REPORT UPLOAD SECTION FOR THIS PATIENT / CHECKOUT */}
+                      <div className="mt-7 rounded-3xl border-2 border-[#0754dc]/20 bg-white p-6">
+                        <div className="mb-5">
+                          <p className="text-sm font-extrabold uppercase text-[#0754dc]">
+                            Patient Report PDF
+                          </p>
+
+                          <h3 className="mt-1 text-2xl font-extrabold text-[#07142f]">
+                            {group.patientName}
+                          </h3>
+
+                          <p className="mt-2 text-sm font-semibold text-slate-500">
+                            Upload one complete PDF report for this patient. The same
+                            report will be linked to all {group.bookings.length} test
+                            {group.bookings.length !== 1 ? "s" : ""} in this checkout.
+                          </p>
+                        </div>
+
+                        <div className="mb-5 rounded-2xl bg-[#f8fbff] p-5">
+                          <p className="mb-3 text-xs font-extrabold uppercase text-slate-500">
+                            Tests Included
+                          </p>
+
+                          <div className="flex flex-wrap gap-2">
+                            {group.bookings.map((booking) => (
+                              <span
+                                key={booking.id}
+                                className="rounded-full bg-white px-4 py-2 text-sm font-extrabold text-[#07142f] shadow-sm"
+                              >
+                                {booking.test_name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <label className="mb-2 block text-sm font-extrabold text-slate-500">
+                          Upload Complete Patient Report PDF
+                        </label>
+
+                        <input
+                          type="file"
+                          accept="application/pdf,.pdf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null;
+
+                            setGroupReportFiles((prev) => ({
+                              ...prev,
+                              [group.groupId]: file,
+                            }));
+
+                            setGroupReportMessages((prev) => {
+                              const next = { ...prev };
+                              delete next[group.groupId];
+                              return next;
+                            });
+                          }}
+                          className="w-full rounded-xl border border-slate-200 bg-white p-4 font-bold outline-none focus:border-[#0754dc]"
+                        />
+
+                        {groupReportFiles[group.groupId] && (
+                          <div className="mt-4 rounded-2xl bg-[#eef5ff] p-4">
+                            <p className="text-xs font-extrabold uppercase text-[#0754dc]">
+                              Selected Report
+                            </p>
+
+                            <p className="mt-2 break-all font-extrabold text-[#07142f]">
+                              {groupReportFiles[group.groupId]?.name}
+                            </p>
+                          </div>
+                        )}
+
+                        {groupReportFiles[group.groupId] && (
+                          <button
+                            type="button"
+                            onClick={() => uploadPatientGroupReport(group)}
+                            disabled={uploadingGroupReportId === group.groupId}
+                            className="mt-4 w-full rounded-2xl bg-[#0754dc] px-6 py-4 text-lg font-extrabold text-white disabled:bg-slate-300"
+                          >
+                            {uploadingGroupReportId === group.groupId
+                              ? "Uploading to Cloudflare..."
+                              : "Upload Patient Report"}
+                          </button>
+                        )}
+
+                        {groupReportMessages[group.groupId] && (
+                          <div
+                            className={`mt-4 rounded-xl p-4 font-extrabold ${
+                              groupReportMessages[group.groupId].type === "success"
+                                ? "bg-[#eafff0] text-[#057a28]"
+                                : "bg-[#fff0f3] text-[#e71935]"
+                            }`}
+                          >
+                            {groupReportMessages[group.groupId].message}
+                          </div>
+                        )}
+
+                        {group.bookings.some((booking) => booking.report_url) ? (
+                          <div className="mt-5 rounded-2xl bg-[#eafff0] p-5">
+                            <p className="font-extrabold text-[#057a28]">
+                              ✓ Patient Report Already Uploaded
+                            </p>
+
+                            <a
+                              href={
+                                group.bookings.find((booking) => booking.report_url)
+                                  ?.report_url || "#"
+                              }
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-3 inline-flex rounded-xl bg-[#05a832] px-6 py-3 font-extrabold text-white"
+                            >
+                              Open Patient Report
+                            </a>
+                          </div>
+                        ) : (
+                          <p className="mt-4 rounded-xl bg-[#fff8df] p-4 text-sm font-bold text-[#7a4f00]">
+                            No patient report uploaded yet.
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1903,7 +2125,7 @@ const selectedPrescriptionPatient =
   </div>
 )}
 
-        {activeTab === "clientBookings" && <ClientBookingsSection />}
+        {activeTab === "Client Report Uploads" && <ClientReportUploadsSection />}
       </section>
     </main>
   );
