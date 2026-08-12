@@ -7,11 +7,14 @@ import {
   FaBan,
   FaCheckCircle,
   FaCreditCard,
+  FaEdit,
   FaExclamationTriangle,
   FaHospital,
   FaMoneyBillWave,
   FaPhoneAlt,
+  FaSave,
   FaSearch,
+  FaTimes,
   FaUserShield,
 } from "react-icons/fa";
 import type { User } from "@supabase/supabase-js";
@@ -37,22 +40,51 @@ type CytocareClient = {
   updated_at: string;
 };
 
+type EditClientForm = {
+  client_code: string;
+  client_name: string;
+  reporting_type: string;
+  report_method: string;
+  whatsapp: string;
+  email: string;
+  login_pin: string;
+  status: "active" | "blocked";
+  credit_limit: string;
+};
+
 export default function AdminClientsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [clients, setClients] = useState<CytocareClient[]>([]);
-  const [searchText, setSearchText] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "blocked">(
-    "all"
-  );
 
-  const [paymentAmounts, setPaymentAmounts] = useState<Record<string, string>>(
-    {}
-  );
+  const [clients, setClients] = useState<CytocareClient[]>([]);
+
+  const [searchText, setSearchText] = useState("");
+
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "blocked"
+  >("all");
+
+  const [paymentAmounts, setPaymentAmounts] = useState<
+    Record<string, string>
+  >({});
+
   const [paymentModes, setPaymentModes] = useState<Record<string, string>>({});
+
   const [paymentNotes, setPaymentNotes] = useState<Record<string, string>>({});
+
   const [savingClientId, setSavingClientId] = useState("");
+
+  // ============================
+  // EDIT CLIENT STATES
+  // ============================
+
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+
+  const [editClientForm, setEditClientForm] =
+    useState<EditClientForm | null>(null);
+
+  const [savingEditClient, setSavingEditClient] = useState(false);
 
   useEffect(() => {
     loadAdminClients();
@@ -101,6 +133,10 @@ export default function AdminClientsPage() {
     setLoading(false);
   }
 
+  // ============================
+  // FILTER CLIENTS
+  // ============================
+
   const filteredClients = useMemo(() => {
     const text = searchText.toLowerCase().trim();
 
@@ -124,12 +160,21 @@ export default function AdminClientsPage() {
     0
   );
 
-  const blockedClients = clients.filter((client) => client.status === "blocked");
-  const activeClients = clients.filter((client) => client.status === "active");
+  const blockedClients = clients.filter(
+    (client) => client.status === "blocked"
+  );
+
+  const activeClients = clients.filter(
+    (client) => client.status === "active"
+  );
 
   function rupees(value: number | string | null | undefined) {
     return `₹${Number(value || 0).toLocaleString("en-IN")}`;
   }
+
+  // ============================
+  // PAYMENT
+  // ============================
 
   async function recordPayment(client: CytocareClient) {
     const amount = Number(paymentAmounts[client.id] || 0);
@@ -141,12 +186,14 @@ export default function AdminClientsPage() {
 
     setSavingClientId(client.id);
 
-    const { error } = await supabase.from("cytocare_client_payments").insert({
-      client_id: client.id,
-      amount,
-      payment_mode: paymentModes[client.id] || "Cash",
-      notes: paymentNotes[client.id] || null,
-    });
+    const { error } = await supabase
+      .from("cytocare_client_payments")
+      .insert({
+        client_id: client.id,
+        amount,
+        payment_mode: paymentModes[client.id] || "Cash",
+        notes: paymentNotes[client.id] || null,
+      });
 
     if (error) {
       setSavingClientId("");
@@ -154,15 +201,152 @@ export default function AdminClientsPage() {
       return;
     }
 
-    setPaymentAmounts((prev) => ({ ...prev, [client.id]: "" }));
-    setPaymentModes((prev) => ({ ...prev, [client.id]: "Cash" }));
-    setPaymentNotes((prev) => ({ ...prev, [client.id]: "" }));
+    setPaymentAmounts((prev) => ({
+      ...prev,
+      [client.id]: "",
+    }));
+
+    setPaymentModes((prev) => ({
+      ...prev,
+      [client.id]: "Cash",
+    }));
+
+    setPaymentNotes((prev) => ({
+      ...prev,
+      [client.id]: "",
+    }));
 
     await loadAdminClients();
 
     setSavingClientId("");
+
     alert("Payment recorded successfully.");
   }
+
+  // ============================
+  // START EDIT CLIENT
+  // ============================
+
+  function startEditClient(client: CytocareClient) {
+    setEditingClientId(client.id);
+
+    setEditClientForm({
+      client_code: client.client_code || "",
+      client_name: client.client_name || "",
+      reporting_type: client.reporting_type || "",
+      report_method: client.report_method || "",
+      whatsapp: client.whatsapp || "",
+      email: client.email || "",
+      login_pin: client.login_pin || "",
+      status: client.status || "active",
+      credit_limit: String(client.credit_limit ?? 0),
+    });
+  }
+
+  // ============================
+  // CANCEL EDIT
+  // ============================
+
+  function cancelEditClient() {
+    setEditingClientId(null);
+    setEditClientForm(null);
+  }
+
+  // ============================
+  // SAVE EDIT CLIENT
+  // ============================
+
+  async function saveClientChanges(clientId: string) {
+    if (!editClientForm) return;
+
+    if (!editClientForm.client_name.trim()) {
+      alert("Please enter client name.");
+      return;
+    }
+
+    if (!editClientForm.client_code.trim()) {
+      alert("Please enter client login/user code.");
+      return;
+    }
+
+    if (!editClientForm.login_pin.trim()) {
+      alert("Please enter login PIN.");
+      return;
+    }
+
+    if (editClientForm.login_pin.trim().length < 4) {
+      alert("Login PIN should contain at least 4 characters.");
+      return;
+    }
+
+    if (Number(editClientForm.credit_limit) < 0) {
+      alert("Credit limit cannot be negative.");
+      return;
+    }
+
+    const duplicateCode = clients.some(
+      (client) =>
+        client.id !== clientId &&
+        client.client_code.toLowerCase() ===
+          editClientForm.client_code.trim().toLowerCase()
+    );
+
+    if (duplicateCode) {
+      alert("This client code/login user is already being used.");
+      return;
+    }
+
+    setSavingEditClient(true);
+
+    const { error } = await supabase
+      .from("cytocare_clients")
+      .update({
+        client_code: editClientForm.client_code.trim(),
+        client_name: editClientForm.client_name.trim(),
+
+        reporting_type:
+          editClientForm.reporting_type.trim() || null,
+
+        report_method:
+          editClientForm.report_method.trim() || null,
+
+        whatsapp:
+          editClientForm.whatsapp.trim() || null,
+
+        email:
+          editClientForm.email.trim() || null,
+
+        login_pin:
+          editClientForm.login_pin.trim(),
+
+        status:
+          editClientForm.status,
+
+        credit_limit:
+          Number(editClientForm.credit_limit || 0),
+
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq("id", clientId);
+
+    if (error) {
+      setSavingEditClient(false);
+      alert(error.message);
+      return;
+    }
+
+    await loadAdminClients();
+
+    setSavingEditClient(false);
+    cancelEditClient();
+
+    alert("Client details and login updated successfully.");
+  }
+
+  // ============================
+  // LOADING
+  // ============================
 
   if (loading) {
     return (
@@ -175,6 +359,10 @@ export default function AdminClientsPage() {
       </main>
     );
   }
+
+  // ============================
+  // NO USER
+  // ============================
 
   if (!user) {
     return (
@@ -200,6 +388,10 @@ export default function AdminClientsPage() {
       </main>
     );
   }
+
+  // ============================
+  // NOT ADMIN
+  // ============================
 
   if (!isAdmin) {
     return (
@@ -228,29 +420,38 @@ export default function AdminClientsPage() {
 
   return (
     <main className="min-h-screen bg-[#f5f9ff] text-[#07142f]">
+
+      {/* ================= HEADER ================= */}
+
       <header className="sticky top-0 z-50 border-b bg-white shadow-sm">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-5 px-6 py-5">
+
           <div>
-            <p className="font-bold text-[#0754dc]">CYTOCARE ADMIN</p>
-            <h1 className="text-3xl font-extrabold">Client Code Management</h1>
+            <p className="font-bold text-[#0754dc]">
+              CYTOCARE ADMIN
+            </p>
+
+            <h1 className="text-3xl font-extrabold">
+              Client Code Management
+            </h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            
-            <Link
-  href="/admin-client-orders"
-  className="rounded-xl bg-[#0754dc] px-5 py-3 font-bold text-white"
->
-  Client Orders
-</Link>
 
-<Link
-  href="/admin-client-prices"
-  className="rounded-xl bg-[#f59e0b] px-5 py-3 font-bold text-white"
->
-  Client Price List
-</Link>
-            
+            <Link
+              href="/admin-client-orders"
+              className="rounded-xl bg-[#0754dc] px-5 py-3 font-bold text-white"
+            >
+              Client Orders
+            </Link>
+
+            <Link
+              href="/admin-client-prices"
+              className="rounded-xl bg-[#f59e0b] px-5 py-3 font-bold text-white"
+            >
+              Client Price List
+            </Link>
+
             <Link
               href="/admin"
               className="flex items-center gap-3 rounded-xl bg-[#eef5ff] px-5 py-3 font-bold text-[#0754dc]"
@@ -265,12 +466,19 @@ export default function AdminClientsPage() {
             >
               Website
             </Link>
+
           </div>
         </div>
       </header>
 
+      {/* ================= CONTENT ================= */}
+
       <section className="mx-auto max-w-[1600px] px-6 py-8">
+
+        {/* STATS */}
+
         <div className="grid gap-5 md:grid-cols-4">
+
           <StatCard
             title="Total Clients"
             value={clients.length}
@@ -298,11 +506,17 @@ export default function AdminClientsPage() {
             icon={<FaMoneyBillWave />}
             color="bg-[#f59e0b]"
           />
+
         </div>
 
+        {/* SEARCH */}
+
         <div className="mt-8 rounded-3xl bg-white p-6 shadow-md">
+
           <div className="flex flex-wrap items-center justify-between gap-5">
+
             <div className="relative w-full max-w-xl">
+
               <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
 
               <input
@@ -311,12 +525,15 @@ export default function AdminClientsPage() {
                 placeholder="Search client code, name, phone, email..."
                 className="w-full rounded-2xl border border-slate-200 py-4 pl-12 pr-4 font-semibold outline-none focus:border-[#0754dc]"
               />
+
             </div>
 
             <select
               value={statusFilter}
               onChange={(e) =>
-                setStatusFilter(e.target.value as "all" | "active" | "blocked")
+                setStatusFilter(
+                  e.target.value as "all" | "active" | "blocked"
+                )
               }
               className="rounded-2xl border border-slate-200 px-5 py-4 font-bold outline-none focus:border-[#0754dc]"
             >
@@ -324,12 +541,21 @@ export default function AdminClientsPage() {
               <option value="active">Active Only</option>
               <option value="blocked">Blocked Only</option>
             </select>
+
           </div>
         </div>
 
+        {/* CLIENT LIST */}
+
         <div className="mt-8 grid gap-6">
+
           {filteredClients.map((client) => {
-            const isBlocked = client.status === "blocked";
+
+            const isBlocked =
+              client.status === "blocked";
+
+            const isEditing =
+              editingClientId === client.id;
 
             return (
               <div
@@ -340,194 +566,646 @@ export default function AdminClientsPage() {
                     : "border-slate-100"
                 }`}
               >
-                <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
-                  <div>
-                    <div className="flex flex-wrap items-start justify-between gap-5">
-                      <div>
-                        <div className="mb-3 flex flex-wrap items-center gap-3">
-                          <span className="rounded-full bg-[#eef5ff] px-4 py-2 text-sm font-extrabold text-[#0754dc]">
-                            {client.client_code}
-                          </span>
 
-                          {isBlocked ? (
-                            <span className="rounded-full bg-[#fff0f3] px-4 py-2 text-sm font-extrabold text-[#e71935]">
-                              Blocked
+                {!isEditing ? (
+                  /* ================= NORMAL CLIENT CARD ================= */
+
+                  <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
+
+                    <div>
+
+                      <div className="flex flex-wrap items-start justify-between gap-5">
+
+                        <div>
+
+                          <div className="mb-3 flex flex-wrap items-center gap-3">
+
+                            <span className="rounded-full bg-[#eef5ff] px-4 py-2 text-sm font-extrabold text-[#0754dc]">
+                              {client.client_code}
                             </span>
-                          ) : (
-                            <span className="rounded-full bg-[#eafff0] px-4 py-2 text-sm font-extrabold text-[#05a832]">
-                              Active
-                            </span>
-                          )}
+
+                            {isBlocked ? (
+                              <span className="rounded-full bg-[#fff0f3] px-4 py-2 text-sm font-extrabold text-[#e71935]">
+                                Blocked
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-[#eafff0] px-4 py-2 text-sm font-extrabold text-[#05a832]">
+                                Active
+                              </span>
+                            )}
+
+                          </div>
+
+                          <h2 className="text-3xl font-extrabold">
+                            {client.client_name}
+                          </h2>
+
+                          <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600 md:grid-cols-2">
+
+                            <p>
+                              <b>Reporting Type:</b>{" "}
+                              {client.reporting_type || "Not added"}
+                            </p>
+
+                            <p>
+                              <b>Report Method:</b>{" "}
+                              {client.report_method || "Not added"}
+                            </p>
+
+                            <p>
+                              <b>WhatsApp:</b>{" "}
+                              {client.whatsapp || "Not added"}
+                            </p>
+
+                            <p>
+                              <b>Email:</b>{" "}
+                              {client.email || "Not added"}
+                            </p>
+
+                            <p>
+                              <b>Login User:</b>{" "}
+                              <span className="font-extrabold text-[#0754dc]">
+                                {client.client_code}
+                              </span>
+                            </p>
+
+                            <p>
+                              <b>Login PIN:</b>{" "}
+                              <span className="font-extrabold">
+                                {client.login_pin}
+                              </span>
+                            </p>
+
+                            <p>
+                              <b>Credit Limit:</b>{" "}
+                              {rupees(client.credit_limit)}
+                            </p>
+
+                          </div>
+
+                          {/* EDIT BUTTON */}
+
+                          <button
+                            type="button"
+                            onClick={() => startEditClient(client)}
+                            className="mt-6 flex items-center gap-3 rounded-xl bg-[#07142f] px-5 py-3 font-extrabold text-white"
+                          >
+                            <FaEdit />
+                            Edit Client / Login
+                          </button>
+
                         </div>
 
-                        <h2 className="text-3xl font-extrabold">
+                        {/* DUE */}
+
+                        <div className="rounded-3xl bg-[#f8fbff] p-5 text-center">
+
+                          <p className="text-sm font-bold text-slate-500">
+                            Unpaid Due
+                          </p>
+
+                          <h3
+                            className={`mt-2 text-4xl font-extrabold ${
+                              isBlocked
+                                ? "text-[#e71935]"
+                                : "text-[#0754dc]"
+                            }`}
+                          >
+                            {rupees(client.unpaid_due)}
+                          </h3>
+
+                        </div>
+
+                      </div>
+
+                      {/* BLOCK WARNING */}
+
+                      {isBlocked && (
+                        <div className="mt-6 rounded-3xl bg-[#fff0f3] p-5">
+
+                          <div className="flex items-start gap-3">
+
+                            <FaExclamationTriangle className="mt-1 text-[#e71935]" />
+
+                            <div>
+
+                              <p className="font-extrabold text-[#e71935]">
+                                Client code is blocked because unpaid due crossed{" "}
+                                {rupees(client.credit_limit)}.
+                              </p>
+
+                              <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+
+                                Minimum payment required to reopen:{" "}
+
+                                <span className="font-extrabold text-[#07142f]">
+                                  {rupees(client.minimum_reopen_payment)}
+                                </span>
+
+                                . Paid after block:{" "}
+
+                                <span className="font-extrabold text-[#07142f]">
+                                  {rupees(client.paid_after_block)}
+                                </span>.
+
+                              </p>
+
+                            </div>
+
+                          </div>
+
+                        </div>
+                      )}
+
+                    </div>
+
+                    {/* ================= PAYMENT ================= */}
+
+                    <div className="rounded-3xl border border-slate-100 bg-[#f8fbff] p-5">
+
+                      <div className="mb-5 flex items-center gap-3">
+
+                        <FaCreditCard className="text-xl text-[#0754dc]" />
+
+                        <h3 className="text-2xl font-extrabold">
+                          Record Payment
+                        </h3>
+
+                      </div>
+
+                      <div className="space-y-4">
+
+                        <input
+                          type="number"
+                          value={paymentAmounts[client.id] || ""}
+                          onChange={(e) =>
+                            setPaymentAmounts((prev) => ({
+                              ...prev,
+                              [client.id]: e.target.value,
+                            }))
+                          }
+                          placeholder="Payment Amount"
+                          className="w-full rounded-xl border border-slate-200 bg-white p-4 outline-none focus:border-[#0754dc]"
+                        />
+
+                        <select
+                          value={paymentModes[client.id] || "Cash"}
+                          onChange={(e) =>
+                            setPaymentModes((prev) => ({
+                              ...prev,
+                              [client.id]: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-xl border border-slate-200 bg-white p-4 font-bold outline-none focus:border-[#0754dc]"
+                        >
+                          <option value="Cash">Cash</option>
+                          <option value="UPI">UPI</option>
+                          <option value="Bank Transfer">
+                            Bank Transfer
+                          </option>
+                          <option value="Cheque">
+                            Cheque
+                          </option>
+                        </select>
+
+                        <textarea
+                          value={paymentNotes[client.id] || ""}
+                          onChange={(e) =>
+                            setPaymentNotes((prev) => ({
+                              ...prev,
+                              [client.id]: e.target.value,
+                            }))
+                          }
+                          placeholder="Payment notes optional"
+                          className="min-h-[90px] w-full rounded-xl border border-slate-200 bg-white p-4 outline-none focus:border-[#0754dc]"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => recordPayment(client)}
+                          disabled={savingClientId === client.id}
+                          className="w-full rounded-2xl bg-[#0754dc] px-6 py-4 text-lg font-extrabold text-white disabled:bg-slate-300"
+                        >
+                          {savingClientId === client.id
+                            ? "Saving..."
+                            : "Save Payment"}
+                        </button>
+
+                        {client.whatsapp &&
+                          client.whatsapp !== "TEAM CYTOCARE" && (
+                            <a
+                              href={`https://wa.me/91${client.whatsapp}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#05a832] px-6 py-4 text-lg font-extrabold text-white"
+                            >
+                              <FaPhoneAlt />
+                              WhatsApp Client
+                            </a>
+                          )}
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                ) : (
+                  /* ================= EDIT CLIENT ================= */
+
+                  <div>
+
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+
+                      <div>
+
+                        <p className="text-sm font-extrabold uppercase text-[#0754dc]">
+                          Edit Client
+                        </p>
+
+                        <h2 className="mt-1 text-3xl font-extrabold">
                           {client.client_name}
                         </h2>
 
-                        <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-600 md:grid-cols-2">
-                          <p>
-                            <b>Reporting Type:</b>{" "}
-                            {client.reporting_type || "Not added"}
-                          </p>
-
-                          <p>
-                            <b>Report Method:</b>{" "}
-                            {client.report_method || "Not added"}
-                          </p>
-
-                          <p>
-                            <b>WhatsApp:</b>{" "}
-                            {client.whatsapp || "Not added"}
-                          </p>
-
-                          <p>
-                            <b>Email:</b> {client.email || "Not added"}
-                          </p>
-
-                          <p>
-                            <b>Login PIN:</b> {client.login_pin}
-                          </p>
-
-                          <p>
-                            <b>Credit Limit:</b> {rupees(client.credit_limit)}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="rounded-3xl bg-[#f8fbff] p-5 text-center">
-                        <p className="text-sm font-bold text-slate-500">
-                          Unpaid Due
+                        <p className="mt-2 text-sm font-semibold text-slate-500">
+                          Change login user, PIN and client details.
                         </p>
 
-                        <h3
-                          className={`mt-2 text-4xl font-extrabold ${
-                            isBlocked ? "text-[#e71935]" : "text-[#0754dc]"
-                          }`}
-                        >
-                          {rupees(client.unpaid_due)}
-                        </h3>
                       </div>
-                    </div>
-
-                    {isBlocked && (
-                      <div className="mt-6 rounded-3xl bg-[#fff0f3] p-5">
-                        <div className="flex items-start gap-3">
-                          <FaExclamationTriangle className="mt-1 text-[#e71935]" />
-
-                          <div>
-                            <p className="font-extrabold text-[#e71935]">
-                              Client code is blocked because unpaid due crossed{" "}
-                              {rupees(client.credit_limit)}.
-                            </p>
-
-                            <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                              Minimum payment required to reopen:{" "}
-                              <span className="font-extrabold text-[#07142f]">
-                                {rupees(client.minimum_reopen_payment)}
-                              </span>
-                              . Paid after block:{" "}
-                              <span className="font-extrabold text-[#07142f]">
-                                {rupees(client.paid_after_block)}
-                              </span>
-                              .
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="rounded-3xl border border-slate-100 bg-[#f8fbff] p-5">
-                    <div className="mb-5 flex items-center gap-3">
-                      <FaCreditCard className="text-xl text-[#0754dc]" />
-                      <h3 className="text-2xl font-extrabold">
-                        Record Payment
-                      </h3>
-                    </div>
-
-                    <div className="space-y-4">
-                      <input
-                        type="number"
-                        value={paymentAmounts[client.id] || ""}
-                        onChange={(e) =>
-                          setPaymentAmounts((prev) => ({
-                            ...prev,
-                            [client.id]: e.target.value,
-                          }))
-                        }
-                        placeholder="Payment Amount"
-                        className="w-full rounded-xl border border-slate-200 bg-white p-4 outline-none focus:border-[#0754dc]"
-                      />
-
-                      <select
-                        value={paymentModes[client.id] || "Cash"}
-                        onChange={(e) =>
-                          setPaymentModes((prev) => ({
-                            ...prev,
-                            [client.id]: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-xl border border-slate-200 bg-white p-4 font-bold outline-none focus:border-[#0754dc]"
-                      >
-                        <option value="Cash">Cash</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Cheque">Cheque</option>
-                      </select>
-
-                      <textarea
-                        value={paymentNotes[client.id] || ""}
-                        onChange={(e) =>
-                          setPaymentNotes((prev) => ({
-                            ...prev,
-                            [client.id]: e.target.value,
-                          }))
-                        }
-                        placeholder="Payment notes optional"
-                        className="min-h-[90px] w-full rounded-xl border border-slate-200 bg-white p-4 outline-none focus:border-[#0754dc]"
-                      />
 
                       <button
                         type="button"
-                        onClick={() => recordPayment(client)}
-                        disabled={savingClientId === client.id}
-                        className="w-full rounded-2xl bg-[#0754dc] px-6 py-4 text-lg font-extrabold text-white disabled:bg-slate-300"
+                        onClick={cancelEditClient}
+                        className="flex items-center gap-2 rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-600"
                       >
-                        {savingClientId === client.id
-                          ? "Saving..."
-                          : "Save Payment"}
+                        <FaTimes />
+                        Cancel
                       </button>
 
-                      {client.whatsapp && client.whatsapp !== "TEAM CYTOCARE" && (
-                        <a
-                          href={`https://wa.me/91${client.whatsapp}`}
-                          target="_blank"
-                          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#05a832] px-6 py-4 text-lg font-extrabold text-white"
-                        >
-                          <FaPhoneAlt />
-                          WhatsApp Client
-                        </a>
-                      )}
                     </div>
+
+                    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+
+                      {/* CLIENT NAME */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Client / User Name
+                        </label>
+
+                        <input
+                          value={editClientForm?.client_name ?? ""}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    client_name: e.target.value,
+                                  }
+                                : prev
+                            )
+                          }
+                          placeholder="Client Name"
+                          className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+                        />
+
+                      </div>
+
+                      {/* LOGIN USER */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Login User / Client Code
+                        </label>
+
+                        <input
+                          value={editClientForm?.client_code ?? ""}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    client_code: e.target.value,
+                                  }
+                                : prev
+                            )
+                          }
+                          placeholder="CYTO-001"
+                          className="w-full rounded-xl border border-slate-200 p-4 font-extrabold text-[#0754dc] outline-none focus:border-[#0754dc]"
+                        />
+
+                      </div>
+
+                      {/* PIN */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Login PIN / Password
+                        </label>
+
+                        <input
+                          value={editClientForm?.login_pin ?? ""}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    login_pin: e.target.value,
+                                  }
+                                : prev
+                            )
+                          }
+                          placeholder="Enter Login PIN"
+                          className="w-full rounded-xl border border-slate-200 p-4 font-extrabold outline-none focus:border-[#0754dc]"
+                        />
+
+                      </div>
+
+                      {/* WHATSAPP */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          WhatsApp Number
+                        </label>
+
+                        <input
+                          value={editClientForm?.whatsapp ?? ""}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    whatsapp: e.target.value,
+                                  }
+                                : prev
+                            )
+                          }
+                          placeholder="WhatsApp Number"
+                          className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+                        />
+
+                      </div>
+
+                      {/* EMAIL */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Email
+                        </label>
+
+                        <input
+                          type="email"
+                          value={editClientForm?.email ?? ""}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    email: e.target.value,
+                                  }
+                                : prev
+                            )
+                          }
+                          placeholder="Client Email"
+                          className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+                        />
+
+                      </div>
+
+                      {/* CREDIT LIMIT */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Credit Limit
+                        </label>
+
+                        <input
+                          type="number"
+                          value={editClientForm?.credit_limit ?? ""}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    credit_limit: e.target.value,
+                                  }
+                                : prev
+                            )
+                          }
+                          placeholder="Credit Limit"
+                          className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+                        />
+
+                      </div>
+
+                      {/* REPORTING TYPE */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Reporting Type
+                        </label>
+
+                        <select
+                          value={editClientForm?.reporting_type ?? ""}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    reporting_type: e.target.value,
+                                  }
+                                : prev
+                            )
+                          }
+                          className="w-full rounded-xl border border-slate-200 p-4 font-bold outline-none focus:border-[#0754dc]"
+                        >
+                          <option value="">Select Reporting Type</option>
+                          <option value="WITH LOGO">
+                            WITH LOGO
+                          </option>
+                          <option value="WITHOUT LOGO">
+                            WITHOUT LOGO
+                          </option>
+                        </select>
+
+                      </div>
+
+                      {/* REPORT METHOD */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Report Method
+                        </label>
+
+                        <select
+                          value={editClientForm?.report_method ?? ""}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    report_method: e.target.value,
+                                  }
+                                : prev
+                            )
+                          }
+                          className="w-full rounded-xl border border-slate-200 p-4 font-bold outline-none focus:border-[#0754dc]"
+                        >
+                          <option value="">
+                            Select Report Method
+                          </option>
+
+                          <option value="WHATSAPP ONLY">
+                            WHATSAPP ONLY
+                          </option>
+
+                          <option value="EMAIL ONLY">
+                            EMAIL ONLY
+                          </option>
+
+                          <option value="WHATSAPP AND EMAIL ONLY">
+                            WHATSAPP AND EMAIL ONLY
+                          </option>
+
+                        </select>
+
+                      </div>
+
+                      {/* STATUS */}
+
+                      <div>
+
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Client Status
+                        </label>
+
+                        <select
+                          value={editClientForm?.status ?? "active"}
+                          onChange={(e) =>
+                            setEditClientForm((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    status: e.target.value as
+                                      | "active"
+                                      | "blocked",
+                                  }
+                                : prev
+                            )
+                          }
+                          className="w-full rounded-xl border border-slate-200 p-4 font-bold outline-none focus:border-[#0754dc]"
+                        >
+                          <option value="active">
+                            Active
+                          </option>
+
+                          <option value="blocked">
+                            Blocked
+                          </option>
+
+                        </select>
+
+                      </div>
+
+                    </div>
+
+                    {/* LOGIN PREVIEW */}
+
+                    <div className="mt-6 rounded-2xl border border-[#0754dc]/20 bg-[#eef5ff] p-5">
+
+                      <p className="text-sm font-extrabold uppercase text-[#0754dc]">
+                        Client Login Preview
+                      </p>
+
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+
+                        <p className="font-bold">
+                          Login User:{" "}
+                          <span className="text-[#0754dc]">
+                            {editClientForm?.client_code || "-"}
+                          </span>
+                        </p>
+
+                        <p className="font-bold">
+                          PIN / Password:{" "}
+                          <span className="text-[#0754dc]">
+                            {editClientForm?.login_pin || "-"}
+                          </span>
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                    {/* SAVE */}
+
+                    <div className="mt-7 flex flex-wrap gap-4">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          saveClientChanges(client.id)
+                        }
+                        disabled={savingEditClient}
+                        className="flex items-center gap-3 rounded-xl bg-[#0754dc] px-7 py-4 font-extrabold text-white disabled:bg-slate-300"
+                      >
+                        <FaSave />
+
+                        {savingEditClient
+                          ? "Saving..."
+                          : "Save Client Changes"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={cancelEditClient}
+                        disabled={savingEditClient}
+                        className="rounded-xl bg-slate-100 px-7 py-4 font-extrabold text-slate-600"
+                      >
+                        Cancel
+                      </button>
+
+                    </div>
+
                   </div>
-                </div>
+                )}
+
               </div>
             );
           })}
 
           {filteredClients.length === 0 && (
             <div className="rounded-3xl bg-white p-10 text-center shadow-md">
-              <h2 className="text-3xl font-extrabold">No clients found</h2>
+
+              <h2 className="text-3xl font-extrabold">
+                No clients found
+              </h2>
+
               <p className="mt-3 text-slate-500">
                 Try changing your search or filter.
               </p>
+
             </div>
           )}
+
         </div>
+
       </section>
+
     </main>
   );
 }
+
+// ============================
+// STAT CARD
+// ============================
 
 function StatCard({
   title,
@@ -542,12 +1220,19 @@ function StatCard({
 }) {
   return (
     <div className="rounded-3xl bg-white p-6 shadow-md">
+
       <div className="flex items-center justify-between gap-4">
+
         <div>
-          <p className="font-bold text-slate-500">{title}</p>
+
+          <p className="font-bold text-slate-500">
+            {title}
+          </p>
+
           <h2 className="mt-2 text-4xl font-extrabold text-[#07142f]">
             {value}
           </h2>
+
         </div>
 
         <div
@@ -555,7 +1240,9 @@ function StatCard({
         >
           {icon}
         </div>
+
       </div>
+
     </div>
   );
 }
