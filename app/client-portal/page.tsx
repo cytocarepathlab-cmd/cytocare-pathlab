@@ -29,22 +29,13 @@ type ClientProfile = {
 
 type ClientReport = {
   report_id: string;
-  patient_name: string;
-  patient_mobile: string;
-  test_name: string;
-  reference_number: string;
+  file_name: string;
   report_url: string;
-  report_status: string;
-  report_uploaded_at: string | null;
-  booking_date: string | null;
+  file_size: number;
+  uploaded_at: string;
 };
 
-type ReportGroup = {
-  patientKey: string;
-  patientName: string;
-  patientMobile: string;
-  reports: ClientReport[];
-};
+
 
 type PriceListRpcRow = {
   row_data?: Record<string, unknown>;
@@ -124,16 +115,8 @@ function sendReportOnWhatsapp(report: ClientReport) {
     alert("Please enter a valid WhatsApp mobile number.");
     return;
   }
-
-  const message = encodeURIComponent(
-    `Hello,\n\nYour Cytocare report is ready.\n\nPatient: ${report.patient_name}\nReport: ${report.test_name}\nReference No: ${report.reference_number}\n\nDownload Report:\n${report.report_url}\n\nRegards,\nCytocare Path Lab`
-  );
-
-  window.open(
-    `https://wa.me/${whatsappNumber}?text=${message}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
+ 
+ 
 }
 
   function formatDate(value: string | null | undefined) {
@@ -242,29 +225,55 @@ function sendReportOnWhatsapp(report: ClientReport) {
     setLoginLoading(false);
   }
 
-  async function loadReports(clientId?: string, pin?: string) {
-    const activeClientId = clientId ?? client?.id;
-    const activePin = pin ?? loginPin;
+  async function loadReports(
+  clientId?: string,
+  pin?: string
+) {
+  const activeClientId =
+    clientId ?? client?.id;
 
-    if (!activeClientId || !activePin) return;
+  const activePin =
+    pin ?? loginPin;
 
-    setReportsLoading(true);
-
-    const { data, error } = await supabase.rpc("client_get_client_reports", {
-      p_client_id: activeClientId,
-      p_login_pin: activePin,
-    });
-
-    if (error) {
-      alert(error.message);
-      setReports([]);
-      setReportsLoading(false);
-      return;
-    }
-
-    setReports((data ?? []) as ClientReport[]);
-    setReportsLoading(false);
+  if (
+    !activeClientId ||
+    !activePin
+  ) {
+    return;
   }
+
+  setReportsLoading(true);
+
+  const {
+    data,
+    error,
+  } = await supabase.rpc(
+    "client_get_uploaded_reports",
+    {
+      p_client_id:
+        activeClientId,
+
+      p_login_pin:
+        activePin,
+    }
+  );
+
+  if (error) {
+    alert(error.message);
+
+    setReports([]);
+
+    setReportsLoading(false);
+
+    return;
+  }
+
+  setReports(
+    (data ?? []) as ClientReport[]
+  );
+
+  setReportsLoading(false);
+}
 
   async function loadPriceList(clientId?: string, pin?: string) {
     const activeClientId = clientId ?? client?.id;
@@ -309,44 +318,30 @@ function sendReportOnWhatsapp(report: ClientReport) {
   }
 
   const filteredReports = useMemo(() => {
-    const q = search.toLowerCase().trim();
+  const q =
+    search.toLowerCase().trim();
 
-    if (!q || activeTab !== "reports") return reports;
+  if (
+    !q ||
+    activeTab !== "reports"
+  ) {
+    return reports;
+  }
 
-    return reports.filter((report) =>
-      [
-        report.patient_name,
-        report.patient_mobile,
-        report.test_name,
-        report.reference_number,
-        report.report_status,
-      ]
-        .join(" ")
+  return reports.filter(
+    (report) =>
+      report.file_name
         .toLowerCase()
         .includes(q)
-    );
-  }, [reports, search, activeTab]);
+  );
+}, [
+  reports,
+  search,
+  activeTab,
+]);
+  
 
-  const groupedReports = useMemo(() => {
-    const map = new Map<string, ReportGroup>();
-
-    filteredReports.forEach((report) => {
-      const patientKey = `${report.patient_name}-${report.patient_mobile}`;
-
-      if (!map.has(patientKey)) {
-        map.set(patientKey, {
-          patientKey,
-          patientName: report.patient_name || "Patient",
-          patientMobile: report.patient_mobile || "No mobile",
-          reports: [],
-        });
-      }
-
-      map.get(patientKey)?.reports.push(report);
-    });
-
-    return Array.from(map.values());
-  }, [filteredReports]);
+   
 
   const filteredPriceList = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -522,7 +517,7 @@ function sendReportOnWhatsapp(report: ClientReport) {
               onChange={(event) => setSearch(event.target.value)}
               placeholder={
                 activeTab === "reports"
-                  ? "Search patient name, mobile, test name or reference number..."
+                  ? "Search report by patient name, accession number or PDF filename..."
                   : "Search test name, category, vial or price..."
               }
               className="w-full bg-transparent text-lg font-bold text-[#07142f] outline-none placeholder:text-slate-400"
@@ -530,114 +525,102 @@ function sendReportOnWhatsapp(report: ClientReport) {
           </div>
         </div>
 
-        {activeTab === "reports" && (
-          <>
-            {reportsLoading ? (
-              <div className="rounded-3xl bg-white p-10 text-center text-xl font-extrabold shadow-sm">
-                Loading reports...
-              </div>
-            ) : groupedReports.length === 0 ? (
-              <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
-                <FaFileMedical className="mx-auto text-6xl text-[#0754dc]" />
+       {activeTab === "reports" && (
+  <>
+    {reportsLoading ? (
+      <div className="rounded-3xl bg-white p-10 text-center text-xl font-extrabold shadow-sm">
+        Loading reports...
+      </div>
+    ) : filteredReports.length === 0 ? (
+      <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
 
-                <h3 className="mt-6 text-2xl font-extrabold">
-                  No reports uploaded yet
+        <FaFileMedical className="mx-auto text-6xl text-[#0754dc]" />
+
+        <h3 className="mt-6 text-2xl font-extrabold">
+          No reports found
+        </h3>
+
+        <p className="mx-auto mt-3 max-w-xl text-slate-500">
+          Reports uploaded by Cytocare
+          will appear here.
+        </p>
+
+      </div>
+    ) : (
+      <div>
+
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+
+          <h3 className="text-2xl font-extrabold">
+            {filteredReports.length} Report
+            {filteredReports.length !== 1
+              ? "s"
+              : ""}
+          </h3>
+
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+
+          {filteredReports.map(
+            (report) => (
+              <div
+                key={report.report_id}
+                className="rounded-[28px] bg-white p-6 shadow-sm"
+              >
+
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#fff0f3] text-2xl text-[#e71935]">
+                  <FaFileMedical />
+                </div>
+
+                <p className="text-xs font-extrabold uppercase text-[#0754dc]">
+                  PDF Report
+                </p>
+
+                <h3 className="mt-2 break-words text-xl font-extrabold text-[#07142f]">
+                  {report.file_name}
                 </h3>
 
-                <p className="mx-auto mt-3 max-w-xl text-slate-500">
-                  Reports will appear here after Cytocare admin uploads PDFs for
-                  this client.
+                <p className="mt-4 text-sm font-bold text-slate-500">
+                  Uploaded:{" "}
+                  {formatDate(
+                    report.uploaded_at
+                  )}
                 </p>
+
+                {report.file_size > 0 && (
+                  <p className="mt-1 text-sm font-semibold text-slate-400">
+                    {(
+                      report.file_size /
+                      1024 /
+                      1024
+                    ).toFixed(2)}{" "}
+                    MB
+                  </p>
+                )}
+
+                <a
+                  href={
+                    report.report_url
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-[#0754dc] px-5 py-4 font-extrabold text-white"
+                >
+                  <FaDownload />
+                  View / Download PDF
+                </a>
+
               </div>
-            ) : (
-              <div className="space-y-6">
-                {groupedReports.map((group) => (
-                  <div
-                    key={group.patientKey}
-                    className="rounded-[32px] bg-white p-7 shadow-sm"
-                  >
-                    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <h3 className="flex items-center gap-3 text-3xl font-extrabold">
-                          <FaUser className="text-[#0754dc]" />
-                          {group.patientName}
-                        </h3>
+            )
+          )}
 
-                        <p className="mt-2 flex items-center gap-2 font-bold text-slate-500">
-                          <FaPhoneAlt />
-                          {group.patientMobile}
-                        </p>
-                      </div>
+        </div>
 
-                      <span className="rounded-full bg-[#eafbff] px-4 py-2 text-sm font-extrabold text-[#0754dc]">
-                        {group.reports.length} Report
-                        {group.reports.length > 1 ? "s" : ""}
-                      </span>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      {group.reports.map((report) => (
-                        <div
-                          key={report.report_id}
-                          className="rounded-2xl border border-slate-100 bg-[#f8fbff] p-5"
-                        >
-                          <p className="mb-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#0754dc]">
-                            Ref: {report.reference_number}
-                          </p>
-
-                          <h4 className="min-h-[56px] text-xl font-extrabold">
-                            {report.test_name}
-                          </h4>
-
-                          <p className="mt-3 text-sm font-bold text-slate-500">
-                            Uploaded:{" "}
-                            {formatDate(
-                              report.report_uploaded_at ?? report.booking_date
-                            )}
-                          </p>
-<div className="mt-5 rounded-2xl bg-white p-4">
-  <a
-    href={report.report_url}
-    target="_blank"
-    rel="noreferrer"
-    className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#0754dc] px-5 py-3 font-extrabold text-white"
-  >
-    <FaDownload />
-    Download PDF
-  </a>
-
-  <div className="mt-4">
-    <label className="mb-2 block text-sm font-extrabold text-slate-500">
-      Send report to WhatsApp
-    </label>
-
-    <input
-      value={reportWhatsappNumbers[report.report_id] ?? ""}
-      onChange={(event) =>
-        updateReportWhatsappNumber(report.report_id, event.target.value)
-      }
-      placeholder="Enter WhatsApp mobile number"
-      className="w-full rounded-xl border border-slate-200 p-3 font-bold text-[#07142f] outline-none focus:border-[#05a832]"
-    />
-
-    <button
-      type="button"
-      onClick={() => sendReportOnWhatsapp(report)}
-      className="mt-3 flex w-full items-center justify-center gap-3 rounded-xl bg-[#05a832] px-5 py-3 font-extrabold text-white"
-    >
-      <FaWhatsapp />
-      Send Report on WhatsApp
-    </button>
-  </div>
-</div>               </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+      </div>
+    )}
+  </>
+)}
 
         {activeTab === "priceList" && (
           <>
