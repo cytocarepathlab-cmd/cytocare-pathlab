@@ -9,11 +9,13 @@ import {
 
 import {
   FaBuilding,
-  FaFilePdf,
-  FaSearch,
-  FaUpload,
   FaCheckCircle,
   FaExclamationTriangle,
+  FaEye,
+  FaFilePdf,
+  FaSearch,
+  FaTrash,
+  FaUpload,
 } from "react-icons/fa";
 
 import { supabase } from "@/lib/supabase";
@@ -27,16 +29,22 @@ type Client = {
   status: string;
 };
 
-type ReportCount = {
+type UploadedReport = {
+  id: string;
   client_id: string;
+  file_name: string;
+  report_url: string;
+  object_key: string | null;
+  file_size: number | null;
+  updated_at: string | null;
 };
 
 export default function ClientReportUploadsSection() {
   const [clients, setClients] =
     useState<Client[]>([]);
 
-  const [reportCounts, setReportCounts] =
-    useState<Record<string, number>>({});
+  const [uploadedReports, setUploadedReports] =
+    useState<UploadedReport[]>([]);
 
   const [search, setSearch] =
     useState("");
@@ -45,6 +53,9 @@ export default function ClientReportUploadsSection() {
     useState<Record<string, File[]>>({});
 
   const [uploadingClientId, setUploadingClientId] =
+    useState("");
+
+  const [deletingReportId, setDeletingReportId] =
     useState("");
 
   const [uploadMessages, setUploadMessages] =
@@ -87,20 +98,79 @@ export default function ClientReportUploadsSection() {
 
     setClients(loadedClients);
 
-    const { data: reportData } = await supabase
-      .from("cytocare_client_uploaded_reports")
-      .select("client_id");
+    const {
+  data: reportData,
+  error: reportError,
+} = await supabase
+  .from("cytocare_client_uploaded_reports")
+  .select(
+    "id, client_id, file_name, report_url, object_key, file_size, updated_at"
+  )
+  .order("updated_at", {
+    ascending: false,
+  });
 
-    const counts: Record<string, number> = {};
+    if (reportError) {
+      console.error(
+        "Client uploaded reports error:",
+        reportError.message
+      );
+      setUploadedReports([]);
+      return;
+    }
 
-    ((reportData ?? []) as ReportCount[]).forEach(
-      (report) => {
-        counts[report.client_id] =
-          (counts[report.client_id] ?? 0) + 1;
+    setUploadedReports(
+      (reportData ?? []) as UploadedReport[]
+    );
+  }
+
+  function getClientReports(clientId: string) {
+    return uploadedReports.filter(
+      (report) => report.client_id === clientId
+    );
+  }
+
+  function formatDate(
+    value: string | null | undefined
+  ) {
+    if (!value) return "Date not available";
+
+    return new Date(value).toLocaleString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       }
     );
+  }
 
-    setReportCounts(counts);
+  function formatFileSize(
+    bytes: number | null | undefined
+  ) {
+    const size = Number(bytes ?? 0);
+
+    if (size <= 0) {
+      return "Size not available";
+    }
+
+    if (size < 1024) {
+      return `${size} B`;
+    }
+
+    if (size < 1024 * 1024) {
+      return `${(
+        size / 1024
+      ).toFixed(1)} KB`;
+    }
+
+    return `${(
+      size /
+      1024 /
+      1024
+    ).toFixed(2)} MB`;
   }
 
   const filteredClients = useMemo(() => {
@@ -285,10 +355,99 @@ export default function ClientReportUploadsSection() {
     setUploadingClientId("");
   }
 
+  async function deleteReport(
+    client: Client,
+    report: UploadedReport
+  ) {
+    const confirmed = window.confirm(
+      `Delete "${report.file_name}"?\n\nThis will remove the PDF from the client portal and Cloudflare storage.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingReportId(report.id);
+
+    try {
+      const {
+        data: sessionData,
+      } =
+        await supabase.auth.getSession();
+
+      const token =
+        sessionData.session?.access_token;
+
+      if (!token) {
+        throw new Error(
+          "Admin session not found."
+        );
+      }
+
+      const response = await fetch(
+        "/api/delete-client-report",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Authorization:
+              `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            reportId: report.id,
+          }),
+        }
+      );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.message ||
+            "Unable to delete report."
+        );
+      }
+
+      setUploadedReports((prev) =>
+        prev.filter(
+          (item) =>
+            item.id !== report.id
+        )
+      );
+
+      setUploadMessages((prev) => ({
+        ...prev,
+        [client.id]: {
+          type: "success",
+          text: `"${report.file_name}" deleted successfully.`,
+        },
+      }));
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to delete report.";
+
+      setUploadMessages((prev) => ({
+        ...prev,
+        [client.id]: {
+          type: "error",
+          text: message,
+        },
+      }));
+    }
+
+    setDeletingReportId("");
+  }
+
   return (
     <div>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
-
         <div>
           <p className="font-extrabold uppercase text-[#0754dc]">
             Client Reports
@@ -299,9 +458,8 @@ export default function ClientReportUploadsSection() {
           </h2>
 
           <p className="mt-2 font-semibold text-slate-500">
-            Select a client and upload multiple
-            PDF reports directly from your
-            computer.
+            Upload, view and delete PDF reports
+            for each client.
           </p>
         </div>
 
@@ -312,13 +470,10 @@ export default function ClientReportUploadsSection() {
         >
           Refresh
         </button>
-
       </div>
 
       <div className="mb-8 rounded-3xl bg-white p-6 shadow-md">
-
         <div className="relative">
-
           <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-[#0754dc]" />
 
           <input
@@ -329,16 +484,12 @@ export default function ClientReportUploadsSection() {
             placeholder="Search client name, code, phone or email..."
             className="w-full rounded-2xl border border-slate-200 py-4 pl-14 pr-5 text-lg font-bold outline-none focus:border-[#0754dc]"
           />
-
         </div>
-
       </div>
 
       <div className="space-y-6">
-
         {filteredClients.map(
           (client) => {
-
             const files =
               selectedFiles[
                 client.id
@@ -353,24 +504,24 @@ export default function ClientReportUploadsSection() {
               uploadingClientId ===
               client.id;
 
+            const clientReports =
+              getClientReports(
+                client.id
+              );
+
             return (
               <div
                 key={client.id}
                 className="rounded-[30px] bg-white p-7 shadow-md"
               >
-
                 <div className="flex flex-wrap items-start justify-between gap-6">
-
                   <div className="flex items-start gap-4">
-
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eef5ff] text-2xl text-[#0754dc]">
                       <FaBuilding />
                     </div>
 
                     <div>
-
                       <div className="flex flex-wrap items-center gap-3">
-
                         <h3 className="text-2xl font-extrabold">
                           {client.client_name}
                         </h3>
@@ -389,11 +540,9 @@ export default function ClientReportUploadsSection() {
                         >
                           {client.status}
                         </span>
-
                       </div>
 
                       <div className="mt-3 space-y-1 text-sm font-semibold text-slate-500">
-
                         {client.whatsapp && (
                           <p>
                             WhatsApp:{" "}
@@ -407,33 +556,24 @@ export default function ClientReportUploadsSection() {
                             {client.email}
                           </p>
                         )}
-
                       </div>
-
                     </div>
-
                   </div>
 
                   <div className="rounded-2xl bg-[#f8fbff] px-6 py-4 text-center">
-
                     <p className="text-xs font-extrabold uppercase text-slate-500">
                       Reports
                     </p>
 
                     <p className="mt-1 text-3xl font-extrabold text-[#0754dc]">
-                      {reportCounts[
-                        client.id
-                      ] ?? 0}
+                      {clientReports.length}
                     </p>
-
                   </div>
-
                 </div>
 
                 {/* FILE UPLOAD */}
 
                 <div className="mt-6 border-t border-slate-100 pt-6">
-
                   <input
                     ref={(element) => {
                       inputRefs.current[
@@ -453,7 +593,6 @@ export default function ClientReportUploadsSection() {
                   />
 
                   <div className="flex flex-wrap gap-3">
-
                     <button
                       type="button"
                       onClick={() =>
@@ -465,7 +604,6 @@ export default function ClientReportUploadsSection() {
                       className="flex items-center gap-3 rounded-xl border-2 border-[#0754dc] px-6 py-3 font-extrabold text-[#0754dc]"
                     >
                       <FaFilePdf />
-
                       Select PDF Reports
                     </button>
 
@@ -492,12 +630,10 @@ export default function ClientReportUploadsSection() {
                             }`}
                       </button>
                     )}
-
                   </div>
 
                   {files.length > 0 && (
                     <div className="mt-5 rounded-2xl bg-[#f8fbff] p-5">
-
                       <p className="mb-3 font-extrabold">
                         {files.length} PDF
                         {files.length > 1
@@ -507,7 +643,6 @@ export default function ClientReportUploadsSection() {
                       </p>
 
                       <div className="max-h-[220px] space-y-2 overflow-y-auto">
-
                         {files.map(
                           (
                             file,
@@ -517,19 +652,15 @@ export default function ClientReportUploadsSection() {
                               key={`${file.name}-${index}`}
                               className="flex items-center gap-3 rounded-xl bg-white px-4 py-3"
                             >
-
                               <FaFilePdf className="shrink-0 text-[#e71935]" />
 
                               <span className="min-w-0 truncate text-sm font-bold">
                                 {file.name}
                               </span>
-
                             </div>
                           )
                         )}
-
                       </div>
-
                     </div>
                   )}
 
@@ -542,7 +673,6 @@ export default function ClientReportUploadsSection() {
                           : "bg-[#fff0f3] text-[#e71935]"
                       }`}
                     >
-
                       {message.type ===
                       "success" ? (
                         <FaCheckCircle className="mt-1 shrink-0" />
@@ -551,12 +681,106 @@ export default function ClientReportUploadsSection() {
                       )}
 
                       {message.text}
-
                     </div>
                   )}
-
                 </div>
 
+                {/* ALREADY UPLOADED REPORTS */}
+
+                <div className="mt-7 border-t border-slate-100 pt-6">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-xl font-extrabold text-[#07142f]">
+                        Uploaded Reports
+                      </h4>
+
+                      <p className="mt-1 text-sm font-semibold text-slate-500">
+                        These PDFs are currently visible in this client&apos;s portal.
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-[#eef5ff] px-4 py-2 text-sm font-extrabold text-[#0754dc]">
+                      {clientReports.length} PDF
+                      {clientReports.length === 1
+                        ? ""
+                        : "s"}
+                    </span>
+                  </div>
+
+                  {clientReports.length === 0 ? (
+                    <div className="rounded-2xl bg-[#fff8df] p-4 text-sm font-bold text-[#7a4f00]">
+                      No reports uploaded for this client yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {clientReports.map(
+                        (report) => {
+                          const deleting =
+                            deletingReportId ===
+                            report.id;
+
+                          return (
+                            <div
+                              key={report.id}
+                              className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-[#f8fbff] p-4"
+                            >
+                              <div className="flex min-w-0 flex-1 items-start gap-3">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#fff0f3] text-[#e71935]">
+                                  <FaFilePdf />
+                                </div>
+
+                                <div className="min-w-0">
+                                  <p className="break-all font-extrabold text-[#07142f]">
+                                    {report.file_name}
+                                  </p>
+
+                                  <p className="mt-1 text-xs font-semibold text-slate-500">
+                                    Uploaded:{" "}
+                                    {formatDate(report.updated_at)}
+                                    {" • "}
+                                    {formatFileSize(
+                                      report.file_size
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-wrap gap-2">
+                                <a
+                                  href={report.report_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2 rounded-xl bg-[#0754dc] px-4 py-3 text-sm font-extrabold text-white"
+                                >
+                                  <FaEye />
+                                  View PDF
+                                </a>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    deleteReport(
+                                      client,
+                                      report
+                                    )
+                                  }
+                                  disabled={deleting}
+                                  className="flex items-center gap-2 rounded-xl bg-[#e71935] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                                >
+                                  <FaTrash />
+
+                                  {deleting
+                                    ? "Deleting..."
+                                    : "Delete"}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           }
@@ -564,16 +788,12 @@ export default function ClientReportUploadsSection() {
 
         {filteredClients.length === 0 && (
           <div className="rounded-3xl bg-white p-10 text-center shadow-md">
-
             <h3 className="text-2xl font-extrabold">
               No clients found
             </h3>
-
           </div>
         )}
-
       </div>
-
     </div>
   );
 }
