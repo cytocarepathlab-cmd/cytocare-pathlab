@@ -427,6 +427,24 @@ export default function Navbar({
                 type="button"
                 onClick={() => {
                   setMenuOpen(false);
+
+                  if (!userEmail) {
+                    onLoginClick();
+                    return;
+                  }
+
+                  window.location.href = "/my-profile";
+                }}
+                className="mb-3 flex w-full items-center gap-3 rounded-xl bg-white px-4 py-3 font-bold text-[#07142f]"
+              >
+                <FaUser className="text-[#0754dc]" />
+                My Profile
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
                   goToPatientDashboard("bookings");
                 }}
                 className="mb-3 flex w-full items-center gap-3 rounded-xl bg-white px-4 py-3 font-bold text-[#07142f]"

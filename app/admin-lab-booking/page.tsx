@@ -66,14 +66,26 @@ export default function AdminLabBookingPage() {
   const eliteActive = isEliteActive(selectedPatient);
 
   const filteredTests = useMemo(() => {
-    const query = testSearch.trim().toLowerCase();
+  const query = testSearch.trim().toLowerCase();
 
-    if (!query) return cytocareTests.slice(0, 20);
+  if (!query) {
+    return cytocareTests;
+  }
 
-    return cytocareTests
-      .filter((item) => item.name.toLowerCase().includes(query))
-      .slice(0, 30);
-  }, [testSearch]);
+  return cytocareTests.filter((item) => {
+    const searchableText = [
+      item.name,
+      item.category,
+      item.vial,
+      item.reportingTime,
+      String(item.price),
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(query);
+  });
+}, [testSearch]);
 
   const subtotal = selectedTests.reduce((sum, item) => sum + item.price, 0);
   const eliteDiscount = eliteActive ? Math.round(subtotal * 0.1) : 0;
@@ -419,7 +431,7 @@ export default function AdminLabBookingPage() {
                     className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 font-semibold outline-none focus:border-[#0754dc]"
                   />
 
-                  <div className="mt-3 max-h-[320px] overflow-y-auto rounded-2xl border border-slate-200">
+                  <div className="mt-3 max-h-[500px] overflow-y-auto rounded-2xl border border-slate-200">
                     {filteredTests.map((test) => (
                       <button
                         key={test.id}
