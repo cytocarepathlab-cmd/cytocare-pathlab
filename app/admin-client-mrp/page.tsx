@@ -43,6 +43,7 @@ type MrpOverride = {
   id: string;
   client_id: string;
   price_id: string;
+  custom_client_rate: number | null;
   custom_mrp: number;
 };
 
@@ -75,6 +76,9 @@ export default function AdminClientMrpPage() {
     useState("");
 
   const [editingMrp, setEditingMrp] =
+    useState("");
+
+  const [editingClientRate, setEditingClientRate] =
     useState("");
 
   const [savingId, setSavingId] =
@@ -192,6 +196,7 @@ export default function AdminClientMrpPage() {
     setSelectedClientId(clientId);
     setEditingPriceId("");
     setEditingMrp("");
+    setEditingClientRate("");
     setSearch("");
 
     await loadOverrides(clientId);
@@ -242,6 +247,13 @@ export default function AdminClientMrpPage() {
 
     setEditingPriceId(price.id);
 
+    setEditingClientRate(
+      String(
+        override?.custom_client_rate ??
+          price.client_rate
+      )
+    );
+
     setEditingMrp(
       String(
         override?.custom_mrp ??
@@ -253,9 +265,10 @@ export default function AdminClientMrpPage() {
   function cancelEdit() {
     setEditingPriceId("");
     setEditingMrp("");
+    setEditingClientRate("");
   }
 
-  async function saveCustomMrp(
+  async function saveCustomRates(
     price: MasterPrice
   ) {
     if (!selectedClientId) {
@@ -266,7 +279,22 @@ export default function AdminClientMrpPage() {
     const customMrp =
       Number(editingMrp);
 
+    const customClientRate =
+      Number(editingClientRate);
+
     if (
+      editingClientRate.trim() === "" ||
+      Number.isNaN(customClientRate) ||
+      customClientRate < 0
+    ) {
+      alert(
+        "Please enter a valid client rate."
+      );
+      return;
+    }
+
+    if (
+      editingMrp.trim() === "" ||
       Number.isNaN(customMrp) ||
       customMrp < 0
     ) {
@@ -290,6 +318,9 @@ export default function AdminClientMrpPage() {
             "cytocare_client_mrp_overrides"
           )
           .update({
+            custom_client_rate:
+              customClientRate,
+
             custom_mrp:
               customMrp,
 
@@ -311,6 +342,9 @@ export default function AdminClientMrpPage() {
 
             price_id:
               price.id,
+
+            custom_client_rate:
+              customClientRate,
 
             custom_mrp:
               customMrp,
@@ -338,7 +372,7 @@ export default function AdminClientMrpPage() {
    
   }
 
-  async function removeCustomMrp(
+  async function removeCustomRates(
     price: MasterPrice
   ) {
     const override =
@@ -353,9 +387,11 @@ export default function AdminClientMrpPage() {
 
     const confirmed =
       window.confirm(
-        `Remove custom MRP for ${price.product}?\n\nThe client will return to the standard MRP of ₹${Number(
+        `Restore standard rates for ${price.product}?\n\nClient Rate: ₹${Number(
+          price.client_rate
+        ).toLocaleString("en-IN")}\nMRP: ₹${Number(
           price.mrp
-        ).toLocaleString("en-IN")}.`
+        ).toLocaleString("en-IN")}`
       );
 
     if (!confirmed) return;
@@ -471,8 +507,8 @@ export default function AdminClientMrpPage() {
               CYTOCARE ADMIN
             </p>
 
-            <h1 className="text-3xl font-extrabold">
-              Client Specific MRP
+          <h1 className="text-3xl font-extrabold">
+              Client Specific Rates
             </h1>
 
           </div>
@@ -515,8 +551,8 @@ export default function AdminClientMrpPage() {
           </h2>
 
           <p className="mt-2 text-slate-500">
-            Only MRP will change for the selected client.
-            Client/Lab Rate remains unchanged.
+            Client Rate and MRP changes apply only to the selected client.
+            Master Price List rates remain unchanged.
           </p>
 
           <select
@@ -558,7 +594,7 @@ export default function AdminClientMrpPage() {
             <div className="mt-6 rounded-3xl bg-[#07142f] p-7 text-white shadow-md">
 
               <p className="text-sm font-extrabold uppercase text-[#8cb9ff]">
-                Editing MRP For
+                Editing Rates For
               </p>
 
               <h2 className="mt-2 text-3xl font-extrabold">
@@ -574,7 +610,7 @@ export default function AdminClientMrpPage() {
                 <div className="rounded-2xl bg-white/10 px-5 py-4">
 
                   <p className="text-xs font-bold text-slate-300">
-                    Custom MRP Tests
+                    Custom Rate Tests
                   </p>
 
                   <p className="mt-1 text-3xl font-extrabold">
@@ -642,6 +678,10 @@ export default function AdminClientMrpPage() {
                     override?.custom_mrp ??
                     price.mrp;
 
+                  const displayedClientRate =
+                    override?.custom_client_rate ??
+                    price.client_rate;
+
                   return (
                     <div
                       key={price.id}
@@ -666,7 +706,7 @@ export default function AdminClientMrpPage() {
 
                             {override && (
                               <span className="rounded-full bg-[#fff4d6] px-3 py-1 text-xs font-extrabold text-[#a56600]">
-                                CUSTOM MRP
+                                CUSTOM RATES
                               </span>
                             )}
 
@@ -694,12 +734,14 @@ export default function AdminClientMrpPage() {
 
                           <p className="mt-1 text-xl font-extrabold text-[#0754dc]">
                             {rupees(
-                              price.client_rate
+                              displayedClientRate
                             )}
                           </p>
 
                           <p className="mt-1 text-xs font-bold text-slate-400">
-                            Common
+                            {override
+                              ? "Custom for this client"
+                              : "Standard"}
                           </p>
 
                         </div>
@@ -757,19 +799,39 @@ export default function AdminClientMrpPage() {
                             <FaEdit />
 
                             {override
-                              ? "Change MRP"
-                              : "Set MRP"}
+                              ? "Edit Rates"
+                              : "Set Rates"}
                           </button>
                         ) : (
                           <div className="min-w-[220px]">
 
                             <label className="mb-2 block text-xs font-extrabold text-slate-500">
+                              New Client Rate
+                            </label>
+
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={
+                                editingClientRate
+                              }
+                              onChange={(e) =>
+                                setEditingClientRate(
+                                  e.target.value
+                                )
+                              }
+                              className="w-full rounded-xl border border-[#0754dc] p-3 text-lg font-extrabold outline-none"
+                            />
+
+                            <label className="mb-2 mt-3 block text-xs font-extrabold text-slate-500">
                               New MRP
                             </label>
 
                             <input
                               type="number"
                               min="0"
+                              step="0.01"
                               value={
                                 editingMrp
                               }
@@ -787,7 +849,7 @@ export default function AdminClientMrpPage() {
                               <button
                                 type="button"
                                 onClick={() =>
-                                  saveCustomMrp(
+                                  saveCustomRates(
                                     price
                                   )
                                 }
@@ -820,14 +882,14 @@ export default function AdminClientMrpPage() {
 
                       </div>
 
-                      {/* REMOVE OVERRIDE */}
+                      {/* RESTORE STANDARD RATES */}
 
                       {override &&
                         !isEditing && (
                           <button
                             type="button"
                             onClick={() =>
-                              removeCustomMrp(
+                              removeCustomRates(
                                 price
                               )
                             }
@@ -838,7 +900,7 @@ export default function AdminClientMrpPage() {
                             className="mt-4 flex items-center gap-2 text-sm font-extrabold text-[#e71935]"
                           >
                             <FaUndo />
-                            Restore Standard MRP
+                            Restore Standard Rates
                           </button>
                         )}
 
