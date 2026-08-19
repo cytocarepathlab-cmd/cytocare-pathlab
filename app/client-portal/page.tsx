@@ -86,6 +86,10 @@ type GeneratedBillPatient = {
   gross_amount: number;
   discount_amount: number;
   final_amount: number;
+  paid_amount: number;
+  due_amount: number;
+  payment_status: string;
+  payment_updated_at?: string | null;
   items: GeneratedBillItem[];
 };
 
@@ -99,6 +103,8 @@ type GeneratedBill = {
   gross_amount: number;
   discount_amount: number;
   final_amount: number;
+  paid_amount: number;
+  due_amount: number;
   created_at: string;
   patients: GeneratedBillPatient[];
 };
@@ -151,6 +157,9 @@ export default function ClientPortalPage() {
   const [billingHistoryLoading, setBillingHistoryLoading] = useState(false);
   const [selectedBillingHistoryDate, setSelectedBillingHistoryDate] =
     useState("");
+  const [paymentEditPatientId, setPaymentEditPatientId] = useState("");
+  const [additionalPayment, setAdditionalPayment] = useState("");
+  const [paymentSavingPatientId, setPaymentSavingPatientId] = useState("");
 
   function getClientName(clientData: ClientProfile | null) {
     if (!clientData) return "Client";
@@ -402,6 +411,73 @@ export default function ClientPortalPage() {
       setBillingHistory([]);
     } finally {
       setBillingHistoryLoading(false);
+    }
+  }
+
+  async function updatePastBillPayment(
+    bill: GeneratedBill,
+    patient: GeneratedBillPatient
+  ) {
+    if (!client?.id) {
+      alert("Client session not found.");
+      return;
+    }
+
+    const additional = Number(additionalPayment || 0);
+
+    if (!Number.isFinite(additional) || additional <= 0) {
+      alert("Enter a valid additional payment amount.");
+      return;
+    }
+
+    if (additional > Number(patient.due_amount || 0)) {
+      alert(
+        `Additional payment cannot be more than due amount ${rupees(
+          patient.due_amount
+        )}.`
+      );
+      return;
+    }
+
+    setPaymentSavingPatientId(patient.id);
+
+    try {
+      const response = await fetch(
+        "/api/client-billing/update-payment",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            clientId: client.id,
+            loginPin,
+            patientId: patient.id,
+            additionalPayment: additional,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Unable to update payment."
+        );
+      }
+
+      setAdditionalPayment("");
+      setPaymentEditPatientId("");
+
+      await loadBillingHistory(client.id, loginPin);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to update payment."
+      );
+    } finally {
+      setPaymentSavingPatientId("");
     }
   }
 
@@ -803,10 +879,20 @@ function getPatientDue(
       0
     );
 
+    const paid = billingPatients.reduce(
+      (sum, patient) => sum + getPatientPaid(patient),
+      0
+    );
+
+    const final = Math.max(gross - discount, 0);
+    const due = Math.max(final - paid, 0);
+
     return {
       gross,
       discount,
-      final: Math.max(gross - discount, 0),
+      final,
+      paid,
+      due,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [billingPatients, priceList]);
@@ -871,6 +957,23 @@ function getPatientDue(
       if (patient.discountEnabled && discount > gross) {
         alert(
           `Discount cannot be more than the gross amount for Patient ${
+            index + 1
+          }.`
+        );
+        return;
+      }
+
+      const finalAmount = getPatientFinal(patient);
+      const enteredPaid = Number(patient.paidAmount || 0);
+
+      if (!Number.isFinite(enteredPaid) || enteredPaid < 0) {
+        alert(`Invalid paid amount for Patient ${index + 1}.`);
+        return;
+      }
+
+      if (enteredPaid > finalAmount) {
+        alert(
+          `Paid amount cannot be more than billed amount for Patient ${
             index + 1
           }.`
         );
@@ -1179,6 +1282,33 @@ function getPatientDue(
         ).toFixed(2)}
       </span>
 
+    </div>
+
+    <div class="line"></div>
+
+    <div class="row">
+      <span>Paid</span>
+      <span>
+        ₹${Number(
+          patient.paid_amount || 0
+        ).toFixed(2)}
+      </span>
+    </div>
+
+    <div class="row">
+      <span>Due</span>
+      <span>
+        ₹${Number(
+          patient.due_amount || 0
+        ).toFixed(2)}
+      </span>
+    </div>
+
+    <div>
+      <b>Payment:</b>
+      ${escapeHtml(
+        patient.payment_status || "Due"
+      )}
     </div>
 
 
@@ -2073,71 +2203,56 @@ function getPatientDue(
                           Billed Price
                         </span>
 
-<div className="mt-5 border-t border-dashed border-slate-500 pt-5">
-
-  <label className="mb-2 block text-sm font-extrabold text-white">
-    Amount Paid by Patient (₹)
-  </label>
-
-  <input
-    type="number"
-    min="0"
-    max={finalAmount}
-    step="1"
-    value={patient.paidAmount}
-    onChange={(event) =>
-      updateBillingPatient(
-        patient.localId,
-        {
-          paidAmount:
-            event.target.value,
-        }
-      )
-    }
-    placeholder="Enter paid amount"
-    className="w-full rounded-xl bg-white p-4 font-extrabold text-[#07142f] outline-none"
-  />
-
-  <div className="mt-4 flex justify-between gap-4">
-
-    <span className="font-bold text-slate-300">
-      Paid
-    </span>
-
-    <span className="font-extrabold text-[#9ee7b0]">
-      {rupees(
-        getPatientPaid(patient)
-      )}
-    </span>
-
-  </div>
-
-
-  <div className="mt-3 flex justify-between gap-4">
-
-    <span className="font-bold text-slate-300">
-      Due
-    </span>
-
-    <span
-      className={`font-extrabold ${
-        getPatientDue(patient) > 0
-          ? "text-[#ff9da9]"
-          : "text-[#9ee7b0]"
-      }`}
-    >
-      {rupees(
-        getPatientDue(patient)
-      )}
-    </span>
-
-  </div>
-
-</div>
-
                         <span className="text-3xl font-extrabold">
                           {rupees(finalAmount)}
                         </span>
+                      </div>
+
+                      <div className="mt-5 border-t border-dashed border-slate-500 pt-5">
+                        <label className="mb-2 block text-sm font-extrabold text-white">
+                          Amount Paid by Patient (₹)
+                        </label>
+
+                        <input
+                          type="number"
+                          min="0"
+                          max={finalAmount}
+                          step="1"
+                          value={patient.paidAmount}
+                          onChange={(event) =>
+                            updateBillingPatient(patient.localId, {
+                              paidAmount: event.target.value,
+                            })
+                          }
+                          placeholder="Enter paid amount"
+                          className="w-full rounded-xl bg-white p-4 font-extrabold text-[#07142f] outline-none"
+                        />
+
+                        <div className="mt-4 flex justify-between gap-4">
+                          <span className="font-bold text-slate-300">
+                            Paid
+                          </span>
+
+                          <span className="font-extrabold text-[#9ee7b0]">
+                            {rupees(getPatientPaid(patient))}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 flex justify-between gap-4">
+                          <span className="font-bold text-slate-300">
+                            Due
+                          </span>
+
+                          <span
+                            className={`font-extrabold ${
+                              getPatientDue(patient) > 0
+                                ? "text-[#ff9da9]"
+                                : "text-[#9ee7b0]"
+                            }`}
+                          >
+                            {rupees(getPatientDue(patient))}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2156,7 +2271,7 @@ function getPatientDue(
             </button>
 
             <div className="rounded-[30px] bg-white p-7 shadow-sm">
-              <div className="grid gap-5 md:grid-cols-3">
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
                 <div>
                   <p className="text-sm font-bold text-slate-500">
                     Billing Cycle Patients
@@ -2181,6 +2296,30 @@ function getPatientDue(
                   </p>
                   <p className="mt-1 text-3xl font-extrabold text-[#05a832]">
                     {rupees(billingTotals.final)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-bold text-slate-500">
+                    Total Paid
+                  </p>
+                  <p className="mt-1 text-3xl font-extrabold text-[#05a832]">
+                    {rupees(billingTotals.paid)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-bold text-slate-500">
+                    Total Due
+                  </p>
+                  <p
+                    className={`mt-1 text-3xl font-extrabold ${
+                      billingTotals.due > 0
+                        ? "text-[#e71935]"
+                        : "text-[#05a832]"
+                    }`}
+                  >
+                    {rupees(billingTotals.due)}
                   </p>
                 </div>
               </div>
@@ -2288,8 +2427,22 @@ function getPatientDue(
                               Billed
                             </p>
 
-                            <p className="text-xl font-extrabold text-[#05a832]">
+                            <p className="text-xl font-extrabold text-[#07142f]">
                               {rupees(bill.final_amount)}
+                            </p>
+
+                            <p className="mt-1 text-xs font-bold text-[#05a832]">
+                              Paid {rupees(bill.paid_amount || 0)}
+                            </p>
+
+                            <p
+                              className={`mt-1 text-xs font-bold ${
+                                Number(bill.due_amount || 0) > 0
+                                  ? "text-[#e71935]"
+                                  : "text-[#05a832]"
+                              }`}
+                            >
+                              Due {rupees(bill.due_amount || 0)}
                             </p>
                           </div>
 
@@ -2315,27 +2468,123 @@ function getPatientDue(
                             </p>
 
                             <p className="mt-1 text-sm font-bold text-slate-500">
+                              {patient.age !== null &&
+                              patient.age !== undefined
+                                ? `${patient.age} yrs • `
+                                : ""}
                               {patient.sex || "-"}
                               {patient.mobile ? ` • ${patient.mobile}` : ""}
                             </p>
 
-                            <p className="mt-2 font-extrabold text-[#05a832]">
-                              {rupees(patient.final_amount)}
+                            {patient.doctor_name && (
+                              <p className="mt-1 text-sm font-bold text-slate-500">
+                                Doctor: {patient.doctor_name}
+                              </p>
+                            )}
+
+                            <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
+                              <div className="rounded-lg bg-[#f8fbff] p-2">
+                                <p className="text-xs font-bold text-slate-400">
+                                  Bill
+                                </p>
+                                <p className="font-extrabold">
+                                  {rupees(patient.final_amount)}
+                                </p>
+                              </div>
+
+                              <div className="rounded-lg bg-[#eafff0] p-2">
+                                <p className="text-xs font-bold text-[#057a28]">
+                                  Paid
+                                </p>
+                                <p className="font-extrabold text-[#05a832]">
+                                  {rupees(patient.paid_amount || 0)}
+                                </p>
+                              </div>
+
+                              <div className="rounded-lg bg-[#fff0f3] p-2">
+                                <p className="text-xs font-bold text-[#e71935]">
+                                  Due
+                                </p>
+                                <p className="font-extrabold text-[#e71935]">
+                                  {rupees(patient.due_amount || 0)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <p className="mt-2 text-xs font-extrabold uppercase text-slate-500">
+                              {patient.payment_status || "Due"}
                             </p>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                printBillData(
-                                  bill,
-                                  patient.id
-                                )
-                              }
-                              className="mt-3 flex items-center gap-2 rounded-lg bg-[#eef5ff] px-3 py-2 text-sm font-extrabold text-[#0754dc]"
-                            >
-                              <FaPrint />
-                              Print Patient
-                            </button>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  printBillData(
+                                    bill,
+                                    patient.id
+                                  )
+                                }
+                                className="flex items-center gap-2 rounded-lg bg-[#eef5ff] px-3 py-2 text-sm font-extrabold text-[#0754dc]"
+                              >
+                                <FaPrint />
+                                Print Patient
+                              </button>
+
+                              {Number(patient.due_amount || 0) > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPaymentEditPatientId(
+                                      paymentEditPatientId === patient.id
+                                        ? ""
+                                        : patient.id
+                                    );
+                                    setAdditionalPayment("");
+                                  }}
+                                  className="rounded-lg bg-[#fff8df] px-3 py-2 text-sm font-extrabold text-[#7a4f00]"
+                                >
+                                  Update Payment
+                                </button>
+                              )}
+                            </div>
+
+                            {paymentEditPatientId === patient.id && (
+                              <div className="mt-4 rounded-xl border border-[#f3d384] bg-[#fffaf0] p-3">
+                                <p className="text-xs font-bold text-[#7a4f00]">
+                                  Due: {rupees(patient.due_amount || 0)}
+                                </p>
+
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={patient.due_amount}
+                                  value={additionalPayment}
+                                  onChange={(event) =>
+                                    setAdditionalPayment(event.target.value)
+                                  }
+                                  placeholder="Additional payment"
+                                  className="mt-2 w-full rounded-lg border border-[#f3d384] bg-white p-3 font-extrabold outline-none"
+                                />
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updatePastBillPayment(
+                                      bill,
+                                      patient
+                                    )
+                                  }
+                                  disabled={
+                                    paymentSavingPatientId === patient.id
+                                  }
+                                  className="mt-2 w-full rounded-lg bg-[#05a832] px-3 py-2 text-sm font-extrabold text-white disabled:bg-slate-300"
+                                >
+                                  {paymentSavingPatientId === patient.id
+                                    ? "Saving..."
+                                    : "Save Payment"}
+                                </button>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
