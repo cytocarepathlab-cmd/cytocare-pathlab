@@ -626,7 +626,7 @@ export const cytocareTests: CytocareTest[] = [
     "category": "Biochemistry",
     "name": "LIVER FUNCTION TEST (LFT)",
     "vial": "RED - PLAIN",
-    "price": 599,
+    "price": 600,
     "reportingTime": "Same day ( 6pm to 7pm)",
     "sourcePage": 2
   },

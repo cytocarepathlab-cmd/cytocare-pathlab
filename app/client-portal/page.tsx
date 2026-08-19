@@ -57,6 +57,8 @@ type BillingPatientDraft = {
   localId: string;
   patientName: string;
   sex: "" | "Male" | "Female" | "Other";
+  age: string;
+  doctorName: string;
   mobile: string;
   testSearch: string;
   selectedPriceIds: string[];
@@ -76,6 +78,8 @@ type GeneratedBillPatient = {
   id: string;
   patient_order: number;
   patient_name: string;
+  age?: number | null;
+  doctor_name?: string | null;
   sex?: string | null;
   mobile?: string | null;
   gross_amount: number;
@@ -100,9 +104,14 @@ type GeneratedBill = {
 
 function newBillingPatient(index = 1): BillingPatientDraft {
   return {
-    localId: `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`,
+    localId: `${Date.now()}-${index}-${Math.random()
+      .toString(36)
+      .slice(2)}`,
+
     patientName: "",
     sex: "",
+    age: "",
+    doctorName: "",
     mobile: "",
     testSearch: "",
     selectedPriceIds: [],
@@ -883,7 +892,11 @@ export default function ClientPortalPage() {
           loginPin,
           patients: billingPatients.map((patient) => ({
             patientName: patient.patientName.trim(),
+            age: patient.age
+    ? Number(patient.age)
+    : null,
             sex: patient.sex,
+             doctorName: patient.doctorName.trim(),
             mobile: patient.mobile.replace(/\D/g, ""),
             priceIds: patient.selectedPriceIds,
             discountAmount: patient.discountEnabled
@@ -983,93 +996,163 @@ export default function ClientPortalPage() {
             : "";
 
         return `
-          <section class="receipt">
-            <div class="center bold title">CYTOCARE PATH LAB</div>
-            <div class="center">Quality Care Innovation</div>
-            <div class="center">Ph: 6203572424</div>
-            <div class="center">9934345686</div>
+  <section class="receipt">
 
-            <div class="line"></div>
+    <div class="center bold title">
+      CYTOCARE PATH LAB
+    </div>
 
-            <div>
-              <b>Client:</b>
-              ${escapeHtml(
-                bill.client_name ||
-                  bill.client_code ||
-                  ""
-              )}
-            </div>
+    <div class="center">
+      Quality Care Innovation
+    </div>
 
-            <div>
-              <b>Bill No:</b>
-              #${escapeHtml(billNumber)}
-            </div>
+    <div class="center">
+      Ph: 6203572424
+    </div>
 
-            <div>
-              <b>Date:</b>
-              ${escapeHtml(
-                formatDate(bill.created_at)
-              )}
-            </div>
+    <div class="center">
+      9934345686
+    </div>
 
-            <div class="line"></div>
 
-            <div>
-              <b>Patient:</b>
-              ${escapeHtml(patient.patient_name)}
-            </div>
+    <div class="line"></div>
 
-            <div>
-              <b>Sex:</b>
-              ${escapeHtml(patient.sex || "-")}
-            </div>
 
-            ${
+    <div>
+      <b>Client:</b>
+      ${escapeHtml(
+        bill.client_name ||
+          bill.client_code ||
+          ""
+      )}
+    </div>
+
+
+    <div>
+      <b>Bill No:</b>
+      #${escapeHtml(billNumber)}
+    </div>
+
+
+    <div>
+      <b>Date:</b>
+      ${escapeHtml(
+        formatDate(bill.created_at)
+      )}
+    </div>
+
+
+    <div class="line"></div>
+
+
+    <div>
+      <b>Patient:</b>
+      ${escapeHtml(
+        patient.patient_name
+      )}
+    </div>
+
+
+    <div>
+      <b>Age / Sex:</b>
+
+      ${
+        patient.age !== null &&
+        patient.age !== undefined
+          ? `${escapeHtml(
+              patient.age
+            )} Years`
+          : "-"
+      }
+
+      /
+
+      ${escapeHtml(
+        patient.sex || "-"
+      )}
+    </div>
+
+
+    ${
+      patient.mobile
+        ? `
+          <div>
+            <b>Mobile:</b>
+            ${escapeHtml(
               patient.mobile
-                ? `
-                  <div>
-                    <b>Mobile:</b>
-                    ${escapeHtml(patient.mobile)}
-                  </div>
-                `
-                : ""
-            }
+            )}
+          </div>
+        `
+        : ""
+    }
 
-            <div class="line"></div>
 
-            ${testLines}
+    ${
+      patient.doctor_name
+        ? `
+          <div>
+            <b>Doctor:</b>
+            ${escapeHtml(
+              patient.doctor_name
+            )}
+          </div>
+        `
+        : ""
+    }
 
-            <div class="line"></div>
 
-            ${
-              Number(patient.discount_amount || 0) > 0
-                ? `
-                  <div class="row">
-                    <span>Gross Total</span>
-                    <span>₹${Number(
-                      patient.gross_amount
-                    ).toFixed(2)}</span>
-                  </div>
+    <div class="line"></div>
 
-                  ${discountLine}
-                `
-                : ""
-            }
 
-            <div class="row total">
-              <span>TOTAL</span>
-              <span>₹${Number(
-                patient.final_amount
-              ).toFixed(2)}</span>
-            </div>
+    ${testLines}
 
-            <div class="line"></div>
 
-            <div class="center thank-you">
-              Thank You
-            </div>
-          </section>
-        `;
+    <div class="line"></div>
+
+
+    ${
+      Number(
+        patient.discount_amount || 0
+      ) > 0
+        ? `
+          <div class="row">
+            <span>Gross Total</span>
+
+            <span>
+              ₹${Number(
+                patient.gross_amount
+              ).toFixed(2)}
+            </span>
+          </div>
+
+          ${discountLine}
+        `
+        : ""
+    }
+
+
+    <div class="row total">
+
+      <span>TOTAL</span>
+
+      <span>
+        ₹${Number(
+          patient.final_amount
+        ).toFixed(2)}
+      </span>
+
+    </div>
+
+
+    <div class="line"></div>
+
+
+    <div class="center thank-you">
+      Thank You
+    </div>
+
+  </section>
+`;
       })
       .join("");
 
@@ -1663,69 +1746,106 @@ export default function ClientPortalPage() {
                     )}
                   </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-3">
-                    <div>
-                      <label className="mb-2 block text-sm font-extrabold">
-                        Patient Name *
-                      </label>
+                  <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                   <div>
+  <label className="mb-2 block text-sm font-extrabold">
+    Patient Name *
+  </label>
 
-                      <input
-                        value={patient.patientName}
-                        onChange={(event) =>
-                          updateBillingPatient(patient.localId, {
-                            patientName: event.target.value,
-                          })
-                        }
-                        placeholder="Enter patient name"
-                        className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
-                      />
-                    </div>
+  <input
+    value={patient.patientName}
+    onChange={(event) =>
+      updateBillingPatient(patient.localId, {
+        patientName: event.target.value,
+      })
+    }
+    placeholder="Enter patient name"
+    className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+  />
+</div>
 
-                    <div>
-                      <label className="mb-2 block text-sm font-extrabold">
-                        Sex *
-                      </label>
+<div>
+  <label className="mb-2 block text-sm font-extrabold">
+    Sex *
+  </label>
 
-                      <select
-                        value={patient.sex}
-                        onChange={(event) =>
-                          updateBillingPatient(patient.localId, {
-                            sex: event.target.value as
-                              | ""
-                              | "Male"
-                              | "Female"
-                              | "Other",
-                          })
-                        }
-                        className="w-full rounded-xl border border-slate-200 bg-white p-4 font-bold outline-none focus:border-[#0754dc]"
-                      >
-                        <option value="">Select Sex</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
+  <select
+    value={patient.sex}
+    onChange={(event) =>
+      updateBillingPatient(patient.localId, {
+        sex: event.target.value as
+          | ""
+          | "Male"
+          | "Female"
+          | "Other",
+      })
+    }
+    className="w-full rounded-xl border border-slate-200 bg-white p-4 font-bold outline-none focus:border-[#0754dc]"
+  >
+    <option value="">Select Sex</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+    <option value="Other">Other</option>
+  </select>
+</div>
 
-                    <div>
-                      <label className="mb-2 block text-sm font-extrabold">
-                        Mobile Number
-                      </label>
+<div>
+  <label className="mb-2 block text-sm font-extrabold">
+    Age
+  </label>
 
-                      <input
-                        inputMode="numeric"
-                        maxLength={10}
-                        value={patient.mobile}
-                        onChange={(event) =>
-                          updateBillingPatient(patient.localId, {
-                            mobile: event.target.value
-                              .replace(/\D/g, "")
-                              .slice(0, 10),
-                          })
-                        }
-                        placeholder="10-digit mobile"
-                        className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
-                      />
-                    </div>
+  <input
+    type="number"
+    min="0"
+    max="120"
+    value={patient.age}
+    onChange={(event) =>
+      updateBillingPatient(patient.localId, {
+        age: event.target.value,
+      })
+    }
+    placeholder="Age"
+    className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+  />
+</div>
+
+<div>
+  <label className="mb-2 block text-sm font-extrabold">
+    Doctor Name
+  </label>
+
+  <input
+    value={patient.doctorName}
+    onChange={(event) =>
+      updateBillingPatient(patient.localId, {
+        doctorName: event.target.value,
+      })
+    }
+    placeholder="Ref. doctor name"
+    className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+  />
+</div>
+
+<div>
+  <label className="mb-2 block text-sm font-extrabold">
+    Mobile Number
+  </label>
+
+  <input
+    inputMode="numeric"
+    maxLength={10}
+    value={patient.mobile}
+    onChange={(event) =>
+      updateBillingPatient(patient.localId, {
+        mobile: event.target.value
+          .replace(/\D/g, "")
+          .slice(0, 10),
+      })
+    }
+    placeholder="10-digit mobile"
+    className="w-full rounded-xl border border-slate-200 p-4 outline-none focus:border-[#0754dc]"
+  />
+</div>
                   </div>
 
                   <div className="mt-7 rounded-3xl bg-[#f8fbff] p-5">

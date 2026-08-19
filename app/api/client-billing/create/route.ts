@@ -6,6 +6,8 @@ export const runtime = "nodejs";
 type IncomingPatient = {
   patientName?: string;
   sex?: string;
+  age?: number | null;
+doctorName?: string;
   mobile?: string;
   priceIds?: string[];
   discountAmount?: number;
@@ -138,6 +140,15 @@ export async function POST(request: Request) {
     const cleanPatients = patients.map((patient, index) => {
       const patientName = String(patient.patientName || "").trim();
       const sex = String(patient.sex || "").trim();
+       const age =
+    patient.age !== null &&
+    patient.age !== undefined &&
+    String(patient.age).trim() !== ""
+      ? Number(patient.age)
+      : null;
+      const doctorName = String(
+    patient.doctorName || ""
+  ).trim();
       const mobile = String(patient.mobile || "")
         .replace(/\D/g, "")
         .slice(0, 10);
@@ -167,6 +178,18 @@ export async function POST(request: Request) {
           `Please select a valid sex for Patient ${index + 1}.`
         );
       }
+if (
+  age !== null &&
+  (
+    !Number.isFinite(age) ||
+    age < 0 ||
+    age > 120
+  )
+) {
+  throw new Error(
+    `Please enter a valid age for Patient ${index + 1}.`
+  );
+}
 
       if (mobile && mobile.length !== 10) {
         throw new Error(
@@ -195,6 +218,8 @@ export async function POST(request: Request) {
       return {
         patientName,
         sex,
+        age,
+  doctorName,
         mobile,
         priceIds,
         discountAmount,
@@ -415,6 +440,8 @@ export async function POST(request: Request) {
       patient_order: number;
       patient_name: string;
       sex: string | null;
+       age: number | null;
+  doctor_name: string | null;
       mobile: string | null;
       gross_amount: number;
       discount_amount: number;
@@ -449,24 +476,41 @@ export async function POST(request: Request) {
             "cytocare_client_bill_patients"
           )
           .insert({
-            bill_id: bill.id,
-            patient_order: index + 1,
-            patient_name:
-              patient.patientName,
-            sex: patient.sex,
-            mobile:
-              patient.mobile || null,
-            gross_amount:
-              patient.grossAmount,
-            discount_amount:
-              patient.discountAmount,
-            final_amount:
-              patient.finalAmount,
-            updated_at: now,
-          })
+  bill_id: bill.id,
+
+  patient_order:
+    index + 1,
+
+  patient_name:
+    patient.patientName,
+
+  sex:
+    patient.sex,
+
+  age:
+    patient.age,
+
+  doctor_name:
+    patient.doctorName || null,
+
+  mobile:
+    patient.mobile || null,
+
+  gross_amount:
+    patient.grossAmount,
+
+  discount_amount:
+    patient.discountAmount,
+
+  final_amount:
+    patient.finalAmount,
+
+  updated_at:
+    now,
+})
           .select(
-            "id, patient_order, patient_name, sex, mobile, gross_amount, discount_amount, final_amount"
-          )
+  "id, patient_order, patient_name, sex, age, doctor_name, mobile, gross_amount, discount_amount, final_amount"
+)
           .single();
 
         if (

@@ -1147,6 +1147,13 @@ if (loading) {
 >
   Lab Booking
 </Link>
+
+<Link
+  href="/admin-client-orders"
+  className="rounded-2xl bg-white px-7 py-5 text-lg font-extrabold text-[#07142f] shadow-sm transition hover:bg-[#eef5ff] hover:text-[#0754dc]"
+>
+  Client Orders
+</Link>
         </div>
 
         {activeTab !== "overview" && (
