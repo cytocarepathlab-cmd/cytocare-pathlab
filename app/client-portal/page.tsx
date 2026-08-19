@@ -64,6 +64,7 @@ type BillingPatientDraft = {
   selectedPriceIds: string[];
   discountEnabled: boolean;
   discountAmount: string;
+  paidAmount: string;
 };
 
 type GeneratedBillItem = {
@@ -117,6 +118,7 @@ function newBillingPatient(index = 1): BillingPatientDraft {
     selectedPriceIds: [],
     discountEnabled: false,
     discountAmount: "",
+    paidAmount: "",
   };
 }
 
@@ -758,6 +760,38 @@ export default function ClientPortalPage() {
     );
   }
 
+function getPatientPaid(
+  patient: BillingPatientDraft
+) {
+  const finalAmount =
+    getPatientFinal(patient);
+
+  const paid =
+    Number(patient.paidAmount || 0);
+
+  if (
+    !Number.isFinite(paid) ||
+    paid < 0
+  ) {
+    return 0;
+  }
+
+  return Math.min(
+    paid,
+    finalAmount
+  );
+}
+
+function getPatientDue(
+  patient: BillingPatientDraft
+) {
+  return Math.max(
+    getPatientFinal(patient) -
+      getPatientPaid(patient),
+    0
+  );
+}
+
   const billingTotals = useMemo(() => {
     const gross = billingPatients.reduce(
       (sum, patient) => sum + getPatientGross(patient),
@@ -902,6 +936,10 @@ export default function ClientPortalPage() {
             discountAmount: patient.discountEnabled
               ? Number(patient.discountAmount || 0)
               : 0,
+              paidAmount:
+  Number(
+    patient.paidAmount || 0
+  ),
           })),
         }),
       });
@@ -2034,6 +2072,68 @@ export default function ClientPortalPage() {
                         <span className="text-lg font-extrabold">
                           Billed Price
                         </span>
+
+<div className="mt-5 border-t border-dashed border-slate-500 pt-5">
+
+  <label className="mb-2 block text-sm font-extrabold text-white">
+    Amount Paid by Patient (₹)
+  </label>
+
+  <input
+    type="number"
+    min="0"
+    max={finalAmount}
+    step="1"
+    value={patient.paidAmount}
+    onChange={(event) =>
+      updateBillingPatient(
+        patient.localId,
+        {
+          paidAmount:
+            event.target.value,
+        }
+      )
+    }
+    placeholder="Enter paid amount"
+    className="w-full rounded-xl bg-white p-4 font-extrabold text-[#07142f] outline-none"
+  />
+
+  <div className="mt-4 flex justify-between gap-4">
+
+    <span className="font-bold text-slate-300">
+      Paid
+    </span>
+
+    <span className="font-extrabold text-[#9ee7b0]">
+      {rupees(
+        getPatientPaid(patient)
+      )}
+    </span>
+
+  </div>
+
+
+  <div className="mt-3 flex justify-between gap-4">
+
+    <span className="font-bold text-slate-300">
+      Due
+    </span>
+
+    <span
+      className={`font-extrabold ${
+        getPatientDue(patient) > 0
+          ? "text-[#ff9da9]"
+          : "text-[#9ee7b0]"
+      }`}
+    >
+      {rupees(
+        getPatientDue(patient)
+      )}
+    </span>
+
+  </div>
+
+</div>
 
                         <span className="text-3xl font-extrabold">
                           {rupees(finalAmount)}

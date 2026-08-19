@@ -79,6 +79,10 @@ type ClientBillPatient = {
   gross_amount: number;
   discount_amount: number;
   final_amount: number;
+  paid_amount: number;
+  due_amount: number;
+  payment_status: string;
+  payment_updated_at?: string | null;
   created_at: string;
   items: ClientBillItem[];
 };
@@ -93,6 +97,8 @@ type ClientBill = {
   gross_amount: number;
   discount_amount: number;
   final_amount: number;
+  paid_amount: number;
+  due_amount: number;
   status: string;
   created_at: string;
   updated_at: string;
@@ -345,6 +351,16 @@ export default function AdminClientOrdersPage() {
         0
       );
 
+      const totalPaid = billsForDate.reduce(
+        (sum, bill) => sum + Number(bill.paid_amount || 0),
+        0
+      );
+
+      const totalDue = billsForDate.reduce(
+        (sum, bill) => sum + Number(bill.due_amount || 0),
+        0
+      );
+
       return {
         ...group,
         availableDates,
@@ -354,6 +370,8 @@ export default function AdminClientOrdersPage() {
         totalGross,
         totalDiscount,
         totalFinalBilled,
+        totalPaid,
+        totalDue,
       };
     });
   }, [filteredBills, selectedBillingDates]);
@@ -1050,7 +1068,7 @@ export default function AdminClientOrdersPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-4 md:grid-cols-4">
+                <div className="mt-5 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
                   <SummaryBox
                     label="Billing Cycles"
                     value={String(group.billsForDate.length)}
@@ -1070,6 +1088,17 @@ export default function AdminClientOrdersPage() {
                     label="Final Billed"
                     value={rupees(group.totalFinalBilled)}
                     green
+                  />
+
+                  <SummaryBox
+                    label="Paid"
+                    value={rupees(group.totalPaid)}
+                    green
+                  />
+
+                  <SummaryBox
+                    label="Due"
+                    value={rupees(group.totalDue)}
                   />
                 </div>
 
@@ -1177,6 +1206,18 @@ export default function AdminClientOrdersPage() {
                                 <p className="mt-1 text-2xl font-extrabold text-[#05a832]">
                                   {rupees(patient.final_amount)}
                                 </p>
+
+                                <p className="mt-2 text-sm font-extrabold text-[#057a28]">
+                                  Paid: {rupees(patient.paid_amount || 0)}
+                                </p>
+
+                                <p className="mt-1 text-sm font-extrabold text-[#e71935]">
+                                  Due: {rupees(patient.due_amount || 0)}
+                                </p>
+
+                                <p className="mt-1 text-xs font-extrabold uppercase text-slate-500">
+                                  {patient.payment_status || "Due"}
+                                </p>
                               </div>
                             </div>
 
@@ -1224,7 +1265,7 @@ export default function AdminClientOrdersPage() {
                               </div>
                             </div>
 
-                            <div className="mt-5 grid gap-3 md:grid-cols-3">
+                            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                               <SummaryBox
                                 label="Gross MRP"
                                 value={rupees(patient.gross_amount)}
@@ -1243,6 +1284,17 @@ export default function AdminClientOrdersPage() {
                                 label="Billed Price"
                                 value={rupees(patient.final_amount)}
                                 green
+                              />
+
+                              <SummaryBox
+                                label="Paid"
+                                value={rupees(patient.paid_amount || 0)}
+                                green
+                              />
+
+                              <SummaryBox
+                                label="Due"
+                                value={rupees(patient.due_amount || 0)}
                               />
                             </div>
                           </div>

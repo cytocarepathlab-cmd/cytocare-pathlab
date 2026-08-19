@@ -115,6 +115,8 @@ export async function POST(request: Request) {
           gross_amount,
           discount_amount,
           final_amount,
+          paid_amount,
+          due_amount,
           status,
           created_at,
           patients:cytocare_client_bill_patients (
@@ -126,6 +128,10 @@ export async function POST(request: Request) {
             gross_amount,
             discount_amount,
             final_amount,
+            paid_amount,
+            due_amount,
+            payment_status,
+            payment_updated_at,
             items:cytocare_client_bill_items (
               id,
               price_id,
@@ -172,6 +178,12 @@ export async function POST(request: Request) {
         final_amount: Number(
           bill.final_amount || 0
         ),
+        paid_amount: Number(
+          bill.paid_amount || 0
+        ),
+        due_amount: Number(
+          bill.due_amount || 0
+        ),
         patients: (bill.patients ?? []).map(
           (patient) => ({
             ...patient,
@@ -184,6 +196,14 @@ export async function POST(request: Request) {
             final_amount: Number(
               patient.final_amount || 0
             ),
+            paid_amount: Number(
+              patient.paid_amount || 0
+            ),
+            due_amount: Number(
+              patient.due_amount || 0
+            ),
+            payment_status:
+              patient.payment_status || "Due",
             items: (patient.items ?? []).map(
               (item) => ({
                 ...item,

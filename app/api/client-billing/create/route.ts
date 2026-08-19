@@ -7,10 +7,11 @@ type IncomingPatient = {
   patientName?: string;
   sex?: string;
   age?: number | null;
-doctorName?: string;
+  doctorName?: string;
   mobile?: string;
   priceIds?: string[];
   discountAmount?: number;
+  paidAmount?: number;
 };
 
 function isUuid(value: string) {
@@ -138,18 +139,28 @@ export async function POST(request: Request) {
     // ---------------------------------------------------------
 
     const cleanPatients = patients.map((patient, index) => {
-      const patientName = String(patient.patientName || "").trim();
-      const sex = String(patient.sex || "").trim();
-       const age =
-    patient.age !== null &&
-    patient.age !== undefined &&
-    String(patient.age).trim() !== ""
-      ? Number(patient.age)
-      : null;
+      const patientName = String(
+        patient.patientName || ""
+      ).trim();
+
+      const sex = String(
+        patient.sex || ""
+      ).trim();
+
+      const age =
+        patient.age !== null &&
+        patient.age !== undefined &&
+        String(patient.age).trim() !== ""
+          ? Number(patient.age)
+          : null;
+
       const doctorName = String(
-    patient.doctorName || ""
-  ).trim();
-      const mobile = String(patient.mobile || "")
+        patient.doctorName || ""
+      ).trim();
+
+      const mobile = String(
+        patient.mobile || ""
+      )
         .replace(/\D/g, "")
         .slice(0, 10);
 
@@ -159,7 +170,9 @@ export async function POST(request: Request) {
             ? patient.priceIds
             : []
           )
-            .map((value) => String(value || "").trim())
+            .map((value) =>
+              String(value || "").trim()
+            )
             .filter(Boolean)
         )
       );
@@ -167,29 +180,35 @@ export async function POST(request: Request) {
       const discountAmount =
         Number(patient.discountAmount || 0);
 
+      const paidAmount =
+        Number(patient.paidAmount || 0);
+
       if (!patientName) {
         throw new Error(
           `Patient ${index + 1} name is required.`
         );
       }
 
-      if (!["Male", "Female", "Other"].includes(sex)) {
+      if (
+        !["Male", "Female", "Other"].includes(sex)
+      ) {
         throw new Error(
           `Please select a valid sex for Patient ${index + 1}.`
         );
       }
-if (
-  age !== null &&
-  (
-    !Number.isFinite(age) ||
-    age < 0 ||
-    age > 120
-  )
-) {
-  throw new Error(
-    `Please enter a valid age for Patient ${index + 1}.`
-  );
-}
+
+      if (
+        age !== null &&
+        (
+          !Number.isFinite(age) ||
+          age < 0 ||
+          age > 120
+        )
+      ) {
+        throw new Error(
+          `Please enter a valid age for Patient ${index + 1}.`
+        );
+      }
 
       if (mobile && mobile.length !== 10) {
         throw new Error(
@@ -215,14 +234,24 @@ if (
         );
       }
 
+      if (
+        !Number.isFinite(paidAmount) ||
+        paidAmount < 0
+      ) {
+        throw new Error(
+          `Invalid paid amount for Patient ${index + 1}.`
+        );
+      }
+
       return {
         patientName,
         sex,
         age,
-  doctorName,
+        doctorName,
         mobile,
         priceIds,
         discountAmount,
+        paidAmount,
       };
     });
 
@@ -256,11 +285,15 @@ if (
       );
     }
 
-    const activeMasterRows = (masterRows ?? []).filter(
-      (row) => row.is_active !== false
-    );
+    const activeMasterRows =
+      (masterRows ?? []).filter(
+        (row) => row.is_active !== false
+      );
 
-    if (activeMasterRows.length !== allPriceIds.length) {
+    if (
+      activeMasterRows.length !==
+      allPriceIds.length
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -306,11 +339,12 @@ if (
       ])
     );
 
-    const calculatedPatients = cleanPatients.map(
-      (patient, index) => {
-        const items = patient.priceIds.map(
-          (priceId) => {
-            const master = masterMap.get(priceId);
+    const calculatedPatients =
+      cleanPatients.map((patient, index) => {
+        const items =
+          patient.priceIds.map((priceId) => {
+            const master =
+              masterMap.get(priceId);
 
             if (!master) {
               throw new Error(
@@ -341,20 +375,22 @@ if (
 
             return {
               priceId,
-              testName: String(master.product || ""),
+              testName:
+                String(master.product || ""),
               category:
                 master.category
                   ? String(master.category)
                   : null,
               rate: effectiveMrp,
             };
-          }
-        );
+          });
 
-        const grossAmount = items.reduce(
-          (sum, item) => sum + item.rate,
-          0
-        );
+        const grossAmount =
+          items.reduce(
+            (sum, item) =>
+              sum + item.rate,
+            0
+          );
 
         if (
           patient.discountAmount >
@@ -367,16 +403,44 @@ if (
           );
         }
 
+        const finalAmount =
+          grossAmount -
+          patient.discountAmount;
+
+        if (
+          patient.paidAmount >
+          finalAmount
+        ) {
+          throw new Error(
+            `Paid amount cannot exceed billed amount for Patient ${
+              index + 1
+            }.`
+          );
+        }
+
+        const dueAmount =
+          Math.max(
+            finalAmount -
+              patient.paidAmount,
+            0
+          );
+
+        const paymentStatus =
+          dueAmount <= 0
+            ? "Paid"
+            : patient.paidAmount > 0
+              ? "Partially Paid"
+              : "Due";
+
         return {
           ...patient,
           items,
           grossAmount,
-          finalAmount:
-            grossAmount -
-            patient.discountAmount,
+          finalAmount,
+          dueAmount,
+          paymentStatus,
         };
-      }
-    );
+      });
 
     const grossAmount =
       calculatedPatients.reduce(
@@ -393,9 +457,28 @@ if (
       );
 
     const finalAmount =
-      grossAmount - discountAmount;
+      calculatedPatients.reduce(
+        (sum, patient) =>
+          sum + patient.finalAmount,
+        0
+      );
 
-    const now = new Date().toISOString();
+    const paidAmount =
+      calculatedPatients.reduce(
+        (sum, patient) =>
+          sum + patient.paidAmount,
+        0
+      );
+
+    const dueAmount =
+      calculatedPatients.reduce(
+        (sum, patient) =>
+          sum + patient.dueAmount,
+        0
+      );
+
+    const now =
+      new Date().toISOString();
 
     // ---------------------------------------------------------
     // 5. CREATE BILL HEADER
@@ -407,19 +490,31 @@ if (
     } = await supabaseAdmin
       .from("cytocare_client_bills")
       .insert({
-        client_id: client.id,
-        client_name: client.client_name,
-        client_code: client.client_code,
+        client_id:
+          client.id,
+        client_name:
+          client.client_name,
+        client_code:
+          client.client_code,
         total_patients:
           calculatedPatients.length,
-        gross_amount: grossAmount,
-        discount_amount: discountAmount,
-        final_amount: finalAmount,
-        status: "Confirmed",
-        updated_at: now,
+        gross_amount:
+          grossAmount,
+        discount_amount:
+          discountAmount,
+        final_amount:
+          finalAmount,
+        paid_amount:
+          paidAmount,
+        due_amount:
+          dueAmount,
+        status:
+          "Confirmed",
+        updated_at:
+          now,
       })
       .select(
-        "id, serial_no, client_id, client_name, client_code, total_patients, gross_amount, discount_amount, final_amount, created_at"
+        "id, serial_no, client_id, client_name, client_code, total_patients, gross_amount, discount_amount, final_amount, paid_amount, due_amount, created_at"
       )
       .single();
 
@@ -440,12 +535,16 @@ if (
       patient_order: number;
       patient_name: string;
       sex: string | null;
-       age: number | null;
-  doctor_name: string | null;
+      age: number | null;
+      doctor_name: string | null;
       mobile: string | null;
       gross_amount: number;
       discount_amount: number;
       final_amount: number;
+      paid_amount: number;
+      due_amount: number;
+      payment_status: string;
+      payment_updated_at: string | null;
       items: Array<{
         id?: string;
         price_id?: string | null;
@@ -476,41 +575,40 @@ if (
             "cytocare_client_bill_patients"
           )
           .insert({
-  bill_id: bill.id,
-
-  patient_order:
-    index + 1,
-
-  patient_name:
-    patient.patientName,
-
-  sex:
-    patient.sex,
-
-  age:
-    patient.age,
-
-  doctor_name:
-    patient.doctorName || null,
-
-  mobile:
-    patient.mobile || null,
-
-  gross_amount:
-    patient.grossAmount,
-
-  discount_amount:
-    patient.discountAmount,
-
-  final_amount:
-    patient.finalAmount,
-
-  updated_at:
-    now,
-})
+            bill_id:
+              bill.id,
+            patient_order:
+              index + 1,
+            patient_name:
+              patient.patientName,
+            sex:
+              patient.sex,
+            age:
+              patient.age,
+            doctor_name:
+              patient.doctorName || null,
+            mobile:
+              patient.mobile || null,
+            gross_amount:
+              patient.grossAmount,
+            discount_amount:
+              patient.discountAmount,
+            final_amount:
+              patient.finalAmount,
+            paid_amount:
+              patient.paidAmount,
+            due_amount:
+              patient.dueAmount,
+            payment_status:
+              patient.paymentStatus,
+            payment_updated_at:
+              now,
+            updated_at:
+              now,
+          })
           .select(
-  "id, patient_order, patient_name, sex, age, doctor_name, mobile, gross_amount, discount_amount, final_amount"
-)
+            "id, patient_order, patient_name, sex, age, doctor_name, mobile, gross_amount, discount_amount, final_amount, paid_amount, due_amount, payment_status, payment_updated_at"
+          )
           .single();
 
         if (
@@ -526,16 +624,20 @@ if (
         }
 
         const itemRows =
-          patient.items.map((item) => ({
-            bill_patient_id:
-              savedPatient.id,
-            price_id: item.priceId,
-            test_name:
-              item.testName,
-            category:
-              item.category,
-            rate: item.rate,
-          }));
+          patient.items.map(
+            (item) => ({
+              bill_patient_id:
+                savedPatient.id,
+              price_id:
+                item.priceId,
+              test_name:
+                item.testName,
+              category:
+                item.category,
+              rate:
+                item.rate,
+            })
+          );
 
         const {
           data: savedItems,
@@ -557,25 +659,37 @@ if (
 
         createdPatients.push({
           ...savedPatient,
-          gross_amount: Number(
-            savedPatient.gross_amount
-          ),
-          discount_amount: Number(
-            savedPatient.discount_amount
-          ),
-          final_amount: Number(
-            savedPatient.final_amount
-          ),
-          items: (savedItems ?? []).map(
-            (item) => ({
-              ...item,
-              rate: Number(item.rate),
-            })
-          ),
+          gross_amount:
+            Number(
+              savedPatient.gross_amount
+            ),
+          discount_amount:
+            Number(
+              savedPatient.discount_amount
+            ),
+          final_amount:
+            Number(
+              savedPatient.final_amount
+            ),
+          paid_amount:
+            Number(
+              savedPatient.paid_amount
+            ),
+          due_amount:
+            Number(
+              savedPatient.due_amount
+            ),
+          items:
+            (savedItems ?? []).map(
+              (item) => ({
+                ...item,
+                rate:
+                  Number(item.rate),
+              })
+            ),
         });
       }
     } catch (error) {
-      // Clean up the whole bill if any child insert fails.
       await supabaseAdmin
         .from("cytocare_client_bills")
         .delete()
@@ -588,16 +702,28 @@ if (
       success: true,
       bill: {
         ...bill,
-        gross_amount: Number(
-          bill.gross_amount
-        ),
-        discount_amount: Number(
-          bill.discount_amount
-        ),
-        final_amount: Number(
-          bill.final_amount
-        ),
-        patients: createdPatients,
+        gross_amount:
+          Number(
+            bill.gross_amount
+          ),
+        discount_amount:
+          Number(
+            bill.discount_amount
+          ),
+        final_amount:
+          Number(
+            bill.final_amount
+          ),
+        paid_amount:
+          Number(
+            bill.paid_amount
+          ),
+        due_amount:
+          Number(
+            bill.due_amount
+          ),
+        patients:
+          createdPatients,
       },
     });
   } catch (error) {
