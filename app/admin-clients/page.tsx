@@ -39,6 +39,7 @@ type CytocareClient = {
   blocked_at: string | null;
   created_at: string;
   updated_at: string;
+  billing_enabled?: boolean;
 };
 
 type EditClientForm = {
@@ -51,6 +52,7 @@ type EditClientForm = {
   login_pin: string;
   status: "active" | "blocked";
   credit_limit: string;
+  billing_enabled: boolean;
 };
 
 export default function AdminClientsPage() {
@@ -243,6 +245,7 @@ export default function AdminClientsPage() {
       login_pin: client.login_pin || "",
       status: client.status || "active",
       credit_limit: String(client.credit_limit ?? 0),
+      billing_enabled: client.billing_enabled ?? false,
     });
   }
 
@@ -328,6 +331,9 @@ export default function AdminClientsPage() {
         credit_limit:
           Number(editClientForm.credit_limit || 0),
 
+        billing_enabled:
+          editClientForm.billing_enabled,
+
         updated_at:
           new Date().toISOString(),
       })
@@ -350,7 +356,35 @@ export default function AdminClientsPage() {
   // ============================
   // LOADING
   // ============================
-async function toggleClientRateVisibility(
+async function toggleClientBilling(client: CytocareClient) {
+  const newValue = !client.billing_enabled;
+
+  const { error } = await supabase
+    .from("cytocare_clients")
+    .update({
+      billing_enabled: newValue,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", client.id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  setClients((prev) =>
+    prev.map((item) =>
+      item.id === client.id
+        ? {
+            ...item,
+            billing_enabled: newValue,
+          }
+        : item
+    )
+  );
+}
+
+  async function toggleClientRateVisibility(
   client: CytocareClient
 ) {
   const newValue = !(client.show_client_rate ?? true);
@@ -688,13 +722,14 @@ async function toggleClientRateVisibility(
                           >
                             <FaEdit />
                             Edit Client / Login
-                            <Link
-  href="/admin-client-mrp"
-  className="mt-3 ml-3 inline-flex items-center gap-3 rounded-xl bg-[#f59e0b] px-5 py-3 font-extrabold text-white"
->
-  Edit Client MRP
-</Link>
                           </button>
+
+                          <Link
+                            href="/admin-client-mrp"
+                            className="ml-3 mt-3 inline-flex items-center gap-3 rounded-xl bg-[#f59e0b] px-5 py-3 font-extrabold text-white"
+                          >
+                            Edit Client MRP
+                          </Link>
 
 <button
   type="button"
@@ -715,6 +750,18 @@ async function toggleClientRateVisibility(
     : client.show_client_rate ?? true
       ? "Client Rate: ENABLED"
       : "Client Rate: DISABLED"}
+</button>
+
+<button
+  type="button"
+  onClick={() => toggleClientBilling(client)}
+  className={`rounded-xl px-5 py-3 font-extrabold ${
+    client.billing_enabled
+      ? "bg-[#eafff0] text-[#057a28]"
+      : "bg-[#fff0f3] text-[#e71935]"
+  }`}
+>
+  Billing: {client.billing_enabled ? "ENABLED" : "DISABLED"}
 </button>
 
                         </div>
@@ -1149,6 +1196,30 @@ async function toggleClientRateVisibility(
                           Client Status
                         </label>
 
+
+  <div>
+  <label className="mb-2 block font-extrabold text-[#07142f]">
+    Billing Access
+  </label>
+
+  <select
+    value={editClientForm?.billing_enabled ? "enabled" : "disabled"}
+    onChange={(e) =>
+      setEditClientForm((prev) =>
+        prev
+          ? {
+              ...prev,
+              billing_enabled: e.target.value === "enabled",
+            }
+          : prev
+      )
+    }
+    className="w-full rounded-2xl border border-slate-200 bg-white p-4 font-bold outline-none focus:border-[#0754dc]"
+  >
+    <option value="enabled">Enabled</option>
+    <option value="disabled">Disabled</option>
+  </select>
+</div>
                         <select
                           value={editClientForm?.status ?? "active"}
                           onChange={(e) =>

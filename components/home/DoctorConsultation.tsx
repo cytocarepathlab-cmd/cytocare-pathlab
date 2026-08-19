@@ -144,7 +144,7 @@ const doctors: Doctor[] = [
     experience: "13+ years",
     clinic: "Thakur Bari Road SNP area Sakchi, Jamshedpur",
     timing: "Mon-Sat, 5 PM - 8 PM",
-    fee: "₹500",
+    fee: "₹600",
     bookingNumber: "6203572424",
   },
   {

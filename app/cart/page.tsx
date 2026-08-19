@@ -455,13 +455,14 @@ function validateBookingSchedule() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          amount: paymentAmount,
-          checkoutGroupKey,
-          patientName: name,
-          patientEmail: email,
-          patientPhone: phone,
-        }),
+      body: JSON.stringify({
+  amount: paymentAmount,
+  checkoutGroupKey,
+  patientName: name,
+  patientEmail: email,
+  patientPhone: phone,
+  userId: user?.id || "",
+}),
       });
 
       const data = await response.json();

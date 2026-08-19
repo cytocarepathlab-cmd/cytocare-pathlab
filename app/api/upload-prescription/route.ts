@@ -44,6 +44,7 @@ export async function POST(request: Request) {
     const patientName = String(formData.get("patientName") || "");
     const patientEmail = String(formData.get("patientEmail") || "");
     const patientPhone = String(formData.get("patientPhone") || "");
+    const notes = String(formData.get("notes") || "").trim();
 
     if (!file) {
       return NextResponse.json(
@@ -139,20 +140,26 @@ export async function POST(request: Request) {
 
     const prescriptionUrl = `${r2PublicBaseUrl.replace(/\/$/, "")}/${objectKey}`;
 
-    const { error } = await supabaseAdmin.from("cytocare_prescriptions").insert({
-      user_id: userId || null,
-      patient_name: patientName,
-      patient_email: patientEmail,
-      patient_phone: patientPhone || null,
-      prescription_url: prescriptionUrl,
-      file_name: file.name,
-      file_type: file.type,
-      prescription_status: "New",
-      expires_at: new Date(
-        Date.now() + 365 * 24 * 60 * 60 * 1000
-      ).toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    const now = new Date().toISOString();
+
+const { error } = await supabaseAdmin
+  .from("cytocare_prescriptions")
+  .insert({
+    user_id: userId || null,
+    patient_name: patientName,
+    patient_email: patientEmail,
+    patient_phone: patientPhone || null,
+    prescription_url: prescriptionUrl,
+    file_name: file.name,
+    file_type: file.type,
+    notes: notes || null,
+    prescription_status: "New",
+    created_at: now,
+    expires_at: new Date(
+      Date.now() + 365 * 24 * 60 * 60 * 1000
+    ).toISOString(),
+    updated_at: now,
+  });
 
     if (error) {
       return NextResponse.json(

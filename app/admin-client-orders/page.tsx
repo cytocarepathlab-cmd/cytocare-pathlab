@@ -8,9 +8,11 @@ import {
   FaCheckCircle,
   FaClipboardList,
   FaCrown,
+  FaFileInvoiceDollar,
   FaHospital,
   FaMoneyBillWave,
   FaSearch,
+  FaTrash,
   FaUserShield,
 } from "react-icons/fa";
 import type { User } from "@supabase/supabase-js";
@@ -58,6 +60,45 @@ type ClientOrder = {
   items: ClientOrderItem[];
 };
 
+type ClientBillItem = {
+  id: string;
+  price_id: string | null;
+  test_name: string;
+  category: string | null;
+  rate: number;
+  created_at: string;
+};
+
+type ClientBillPatient = {
+  id: string;
+  bill_id: string;
+  patient_order: number;
+  patient_name: string;
+  sex: string | null;
+  mobile: string | null;
+  gross_amount: number;
+  discount_amount: number;
+  final_amount: number;
+  created_at: string;
+  items: ClientBillItem[];
+};
+
+type ClientBill = {
+  id: string;
+  serial_no: number;
+  client_id: string;
+  client_name: string | null;
+  client_code: string | null;
+  total_patients: number;
+  gross_amount: number;
+  discount_amount: number;
+  final_amount: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  patients: ClientBillPatient[];
+};
+
 const orderStatuses = [
   "Pending",
   "Sample Received",
@@ -74,9 +115,16 @@ export default function AdminClientOrdersPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<ClientOrder[]>([]);
+  const [bills, setBills] = useState<ClientBill[]>([]);
+  const [activeTab, setActiveTab] = useState<"orders" | "billing">("orders");
+  const [selectedBillingDates, setSelectedBillingDates] = useState<
+    Record<string, string>
+  >({});
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [savingOrderId, setSavingOrderId] = useState("");
+  const [deletingBillItemId, setDeletingBillItemId] = useState("");
+  const [deletingBillPatientId, setDeletingBillPatientId] = useState("");
 
   useEffect(() => {
     loadClientOrders();
@@ -134,6 +182,30 @@ export default function AdminClientOrdersPage() {
     }
 
     setOrders((data ?? []) as ClientOrder[]);
+
+    const { data: billsData, error: billsError } = await supabase
+      .from("cytocare_client_bills")
+      .select(
+        `
+        *,
+        patients:cytocare_client_bill_patients (
+          *,
+          items:cytocare_client_bill_items (
+            *
+          )
+        )
+        `
+      )
+      .order("created_at", { ascending: false });
+
+    if (billsError) {
+      alert(billsError.message);
+      setBills([]);
+      setLoading(false);
+      return;
+    }
+
+    setBills((billsData ?? []) as ClientBill[]);
     setLoading(false);
   }
 
@@ -158,6 +230,134 @@ export default function AdminClientOrdersPage() {
     });
   }, [orders, searchText, statusFilter]);
 
+  const filteredBills = useMemo(() => {
+    const text = searchText.toLowerCase().trim();
+
+    return bills.filter((bill) => {
+      if (!text) return true;
+
+      const serial = String(bill.serial_no ?? "");
+      const clientName = (bill.client_name ?? "").toLowerCase();
+      const clientCode = (bill.client_code ?? "").toLowerCase();
+
+      return (
+        serial.includes(text) ||
+        clientName.includes(text) ||
+        clientCode.includes(text) ||
+        (bill.patients ?? []).some(
+          (patient) =>
+            patient.patient_name.toLowerCase().includes(text) ||
+            (patient.mobile ?? "").toLowerCase().includes(text) ||
+            (patient.items ?? []).some((item) =>
+              item.test_name.toLowerCase().includes(text)
+            )
+        )
+      );
+    });
+  }, [bills, searchText]);
+
+  function getBillingDateKey(value: string) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date(value));
+
+    const year = parts.find((part) => part.type === "year")?.value || "";
+    const month = parts.find((part) => part.type === "month")?.value || "";
+    const day = parts.find((part) => part.type === "day")?.value || "";
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function formatBillingDate(dateKey: string) {
+    if (!dateKey) return "Select date";
+
+    const [year, month, day] = dateKey.split("-").map(Number);
+
+    return new Date(year, month - 1, day).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  const billingClientGroups = useMemo(() => {
+    const groupMap = new Map<
+      string,
+      {
+        clientId: string;
+        clientName: string;
+        clientCode: string;
+        bills: ClientBill[];
+      }
+    >();
+
+    for (const bill of filteredBills) {
+      const key =
+        bill.client_id ||
+        `${bill.client_code || ""}-${bill.client_name || ""}`;
+
+      const existing = groupMap.get(key);
+
+      if (existing) {
+        existing.bills.push(bill);
+      } else {
+        groupMap.set(key, {
+          clientId: key,
+          clientName: bill.client_name || "Unknown Client",
+          clientCode: bill.client_code || "No client code",
+          bills: [bill],
+        });
+      }
+    }
+
+    return Array.from(groupMap.values()).map((group) => {
+      const availableDates = Array.from(
+        new Set(group.bills.map((bill) => getBillingDateKey(bill.created_at)))
+      ).sort((a, b) => b.localeCompare(a));
+
+      const selectedDate =
+        selectedBillingDates[group.clientId] || availableDates[0] || "";
+
+      const billsForDate = group.bills.filter(
+        (bill) => getBillingDateKey(bill.created_at) === selectedDate
+      );
+
+      const totalPatients = billsForDate.reduce(
+        (sum, bill) => sum + Number(bill.total_patients || 0),
+        0
+      );
+
+      const totalGross = billsForDate.reduce(
+        (sum, bill) => sum + Number(bill.gross_amount || 0),
+        0
+      );
+
+      const totalDiscount = billsForDate.reduce(
+        (sum, bill) => sum + Number(bill.discount_amount || 0),
+        0
+      );
+
+      const totalFinalBilled = billsForDate.reduce(
+        (sum, bill) => sum + Number(bill.final_amount || 0),
+        0
+      );
+
+      return {
+        ...group,
+        availableDates,
+        selectedDate,
+        billsForDate,
+        totalPatients,
+        totalGross,
+        totalDiscount,
+        totalFinalBilled,
+      };
+    });
+  }, [filteredBills, selectedBillingDates]);
+
   const totalOrders = orders.length;
 
   const totalPatientPayable = orders.reduce(
@@ -171,6 +371,23 @@ export default function AdminClientOrdersPage() {
   );
 
   const eliteOrders = orders.filter((order) => order.elite_benefit_applied);
+
+  const totalBillingCycles = bills.length;
+
+  const totalBillingPatients = bills.reduce(
+    (sum, bill) => sum + Number(bill.total_patients || 0),
+    0
+  );
+
+  const totalBillingDiscount = bills.reduce(
+    (sum, bill) => sum + Number(bill.discount_amount || 0),
+    0
+  );
+
+  const totalBilledAmount = bills.reduce(
+    (sum, bill) => sum + Number(bill.final_amount || 0),
+    0
+  );
 
   function rupees(value: number | string | null | undefined) {
     return `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -220,6 +437,122 @@ export default function AdminClientOrdersPage() {
     );
 
     setSavingOrderId("");
+  }
+
+  async function deleteBillingItem(
+    item: ClientBillItem,
+    patientName: string
+  ) {
+    const confirmed = window.confirm(
+      `Delete "${item.test_name}" from ${patientName}'s bill? The patient and billing totals will be recalculated automatically.`
+    );
+
+    if (!confirmed) return;
+
+    setDeletingBillItemId(item.id);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Admin session expired. Please login again.");
+      }
+
+      const response = await fetch(
+        "/api/admin/client-billing/delete-item",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            itemId: item.id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Unable to delete billed test."
+        );
+      }
+
+      await loadClientOrders();
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete billed test."
+      );
+    } finally {
+      setDeletingBillItemId("");
+    }
+  }
+
+  async function deleteBillingPatient(
+    patient: ClientBillPatient
+  ) {
+    const confirmed = window.confirm(
+      `Delete patient "${patient.patient_name}" and all booked tests from this bill?`
+    );
+
+    if (!confirmed) return;
+
+    setDeletingBillPatientId(patient.id);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error(
+          "Admin session expired. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        "/api/admin/client-billing/delete-patient",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            patientId: patient.id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message ||
+            "Unable to delete billed patient."
+        );
+      }
+
+      await loadClientOrders();
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete billed patient."
+      );
+    } finally {
+      setDeletingBillPatientId("");
+    }
   }
 
   if (loading) {
@@ -290,7 +623,7 @@ export default function AdminClientOrdersPage() {
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-5 px-6 py-5">
           <div>
             <p className="font-bold text-[#0754dc]">CYTOCARE ADMIN</p>
-            <h1 className="text-3xl font-extrabold">Client Orders</h1>
+            <h1 className="text-3xl font-extrabold">Client Orders & Billing</h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -313,36 +646,103 @@ export default function AdminClientOrdersPage() {
       </header>
 
       <section className="mx-auto max-w-[1600px] px-6 py-8">
-        <div className="grid gap-5 md:grid-cols-4">
-          <StatCard
-            title="Total Orders"
-            value={totalOrders}
-            icon={<FaClipboardList />}
-            color="bg-[#0754dc]"
-          />
+        <div className="mb-8 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("orders");
+              setSearchText("");
+              setStatusFilter("all");
+            }}
+            className={`rounded-2xl px-6 py-4 text-lg font-extrabold ${
+              activeTab === "orders"
+                ? "bg-[#0754dc] text-white"
+                : "bg-white text-[#0754dc] shadow-sm"
+            }`}
+          >
+            <FaClipboardList className="mr-2 inline" />
+            Client Orders
+          </button>
 
-          <StatCard
-            title="Elite Orders"
-            value={eliteOrders.length}
-            icon={<FaCrown />}
-            color="bg-[#07142f]"
-            premium
-          />
-
-          <StatCard
-            title="Patient Payable"
-            value={rupees(totalPatientPayable)}
-            icon={<FaMoneyBillWave />}
-            color="bg-[#05a832]"
-          />
-
-          <StatCard
-            title="Client Due"
-            value={rupees(totalClientDue)}
-            icon={<FaHospital />}
-            color="bg-[#f59e0b]"
-          />
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("billing");
+              setSearchText("");
+            }}
+            className={`rounded-2xl px-6 py-4 text-lg font-extrabold ${
+              activeTab === "billing"
+                ? "bg-[#0754dc] text-white"
+                : "bg-white text-[#0754dc] shadow-sm"
+            }`}
+          >
+            <FaFileInvoiceDollar className="mr-2 inline" />
+            Client Billing
+          </button>
         </div>
+
+        {activeTab === "orders" ? (
+          <div className="grid gap-5 md:grid-cols-4">
+            <StatCard
+              title="Total Orders"
+              value={totalOrders}
+              icon={<FaClipboardList />}
+              color="bg-[#0754dc]"
+            />
+
+            <StatCard
+              title="Elite Orders"
+              value={eliteOrders.length}
+              icon={<FaCrown />}
+              color="bg-[#07142f]"
+              premium
+            />
+
+            <StatCard
+              title="Patient Payable"
+              value={rupees(totalPatientPayable)}
+              icon={<FaMoneyBillWave />}
+              color="bg-[#05a832]"
+            />
+
+            <StatCard
+              title="Client Due"
+              value={rupees(totalClientDue)}
+              icon={<FaHospital />}
+              color="bg-[#f59e0b]"
+            />
+          </div>
+        ) : (
+          <div className="grid gap-5 md:grid-cols-4">
+            <StatCard
+              title="Billing Cycles"
+              value={totalBillingCycles}
+              icon={<FaFileInvoiceDollar />}
+              color="bg-[#0754dc]"
+            />
+
+            <StatCard
+              title="Patients Billed"
+              value={totalBillingPatients}
+              icon={<FaHospital />}
+              color="bg-[#07142f]"
+            />
+
+            <StatCard
+              title="Discount Given"
+              value={rupees(totalBillingDiscount)}
+              icon={<FaMoneyBillWave />}
+              color="bg-[#f59e0b]"
+            />
+
+            <StatCard
+              title="Final Billed"
+              value={rupees(totalBilledAmount)}
+              icon={<FaCheckCircle />}
+              color="bg-[#05a832]"
+            />
+          </div>
+        )}
 
         <div className="mt-8 rounded-3xl bg-white p-6 shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-5">
@@ -352,27 +752,34 @@ export default function AdminClientOrdersPage() {
               <input
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search client, patient mobile, test name..."
+                placeholder={
+                  activeTab === "orders"
+                    ? "Search client, patient mobile, test name..."
+                    : "Search bill no., client, patient, mobile or test..."
+                }
                 className="w-full rounded-2xl border border-slate-200 py-4 pl-12 pr-4 font-semibold outline-none focus:border-[#0754dc]"
               />
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-2xl border border-slate-200 px-5 py-4 font-bold outline-none focus:border-[#0754dc]"
-            >
-              <option value="all">All Orders</option>
-              {orderStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+            {activeTab === "orders" && (
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-2xl border border-slate-200 px-5 py-4 font-bold outline-none focus:border-[#0754dc]"
+              >
+                <option value="all">All Orders</option>
+                {orderStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6">
+        {activeTab === "orders" && (
+          <div className="mt-8 grid gap-6">
           {filteredOrders.map((order) => (
             <div
               key={order.id}
@@ -570,7 +977,311 @@ export default function AdminClientOrdersPage() {
               </p>
             </div>
           )}
-        </div>
+          </div>
+        )}
+
+        {activeTab === "billing" && (
+          <div className="mt-8 grid gap-7">
+            {billingClientGroups.map((group) => (
+              <div
+                key={group.clientId}
+                className="rounded-[30px] border border-slate-100 bg-white p-6 shadow-md"
+              >
+                <div className="flex flex-wrap items-end justify-between gap-5">
+                  <div>
+                    <p className="text-sm font-extrabold uppercase text-[#0754dc]">
+                      Client Billing
+                    </p>
+
+                    <h2 className="mt-1 text-3xl font-extrabold">
+                      {group.clientName}
+                    </h2>
+
+                    <p className="mt-2 font-bold text-[#0754dc]">
+                      {group.clientCode}
+                    </p>
+                  </div>
+
+                  <div className="w-full max-w-sm">
+                    <label className="mb-2 block text-sm font-extrabold text-slate-600">
+                      Select Billing Date
+                    </label>
+
+                    <select
+                      value={group.selectedDate}
+                      onChange={(event) =>
+                        setSelectedBillingDates((prev) => ({
+                          ...prev,
+                          [group.clientId]: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 font-extrabold outline-none focus:border-[#0754dc]"
+                    >
+                      {group.availableDates.map((dateKey) => (
+                        <option key={dateKey} value={dateKey}>
+                          {formatBillingDate(dateKey)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-3xl bg-[#07142f] p-6 text-white">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-slate-300">
+                        Selected Date
+                      </p>
+
+                      <h3 className="mt-1 text-2xl font-extrabold">
+                        {formatBillingDate(group.selectedDate)}
+                      </h3>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-slate-300">
+                        Total Billed That Day
+                      </p>
+
+                      <p className="mt-1 text-4xl font-extrabold">
+                        {rupees(group.totalFinalBilled)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-4 md:grid-cols-4">
+                  <SummaryBox
+                    label="Billing Cycles"
+                    value={String(group.billsForDate.length)}
+                  />
+
+                  <SummaryBox
+                    label="Patients"
+                    value={String(group.totalPatients)}
+                  />
+
+                  <SummaryBox
+                    label="Gross / Client MRP"
+                    value={rupees(group.totalGross)}
+                  />
+
+                  <SummaryBox
+                    label="Final Billed"
+                    value={rupees(group.totalFinalBilled)}
+                    green
+                  />
+                </div>
+
+                {group.totalDiscount > 0 && (
+                  <div className="mt-4 rounded-2xl bg-[#fff8df] p-4 font-extrabold text-[#7a4f00]">
+                    Total Discount Given on {formatBillingDate(group.selectedDate)}:
+                    {" "}
+                    -{rupees(group.totalDiscount)}
+                  </div>
+                )}
+
+                <div className="mt-7 space-y-6">
+                  {group.billsForDate.map((bill) => (
+                    <div
+                      key={bill.id}
+                      className="rounded-3xl border border-slate-200 bg-[#f8fbff] p-5"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-5">
+                        <div>
+                          <div className="mb-3 flex flex-wrap items-center gap-3">
+                            <span className="rounded-full bg-[#eef5ff] px-4 py-2 text-sm font-extrabold text-[#0754dc]">
+                              Bill #{String(bill.serial_no).padStart(6, "0")}
+                            </span>
+
+                            <span className="rounded-full bg-[#eafff0] px-4 py-2 text-sm font-extrabold text-[#057a28]">
+                              {bill.status || "Confirmed"}
+                            </span>
+
+                            <span className="rounded-full bg-white px-4 py-2 text-sm font-extrabold text-slate-600">
+                              {formatDate(bill.created_at)}
+                            </span>
+                          </div>
+
+                          <p className="font-bold text-slate-500">
+                            {bill.total_patients} patient
+                            {Number(bill.total_patients) !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+
+                        <div className="min-w-[230px] rounded-2xl bg-white p-4 text-right shadow-sm">
+                          <p className="text-xs font-bold text-slate-500">
+                            Bill Amount
+                          </p>
+
+                          <p className="mt-1 text-3xl font-extrabold text-[#05a832]">
+                            {rupees(bill.final_amount)}
+                          </p>
+
+                          {Number(bill.discount_amount || 0) > 0 && (
+                            <p className="mt-2 text-sm font-bold text-[#7a4f00]">
+                              Discount: -{rupees(bill.discount_amount)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-5 space-y-5">
+                        {(bill.patients ?? []).map((patient) => (
+                          <div
+                            key={patient.id}
+                            className="rounded-3xl bg-white p-5 shadow-sm"
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-4">
+                              <div>
+                                <p className="text-sm font-extrabold uppercase text-[#0754dc]">
+                                  Patient {patient.patient_order}
+                                </p>
+
+                                <h3 className="mt-1 text-2xl font-extrabold">
+                                  {patient.patient_name}
+                                </h3>
+
+                                <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-slate-500">
+                                  <span>
+                                    Sex: {patient.sex || "Not added"}
+                                  </span>
+
+                                  <span>
+                                    Mobile: {patient.mobile || "Not added"}
+                                  </span>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    deleteBillingPatient(patient)
+                                  }
+                                  disabled={
+                                    deletingBillPatientId === patient.id
+                                  }
+                                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#fff0f3] px-4 py-2 text-sm font-extrabold text-[#e71935] transition hover:bg-[#e71935] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  <FaTrash />
+                                  {deletingBillPatientId === patient.id
+                                    ? "Deleting..."
+                                    : "Delete Patient"}
+                                </button>
+                              </div>
+
+                              <div className="rounded-2xl bg-[#eafff0] px-5 py-4 text-right">
+                                <p className="text-xs font-bold text-[#057a28]">
+                                  Patient Billed
+                                </p>
+
+                                <p className="mt-1 text-2xl font-extrabold text-[#05a832]">
+                                  {rupees(patient.final_amount)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="mt-5">
+                              <h4 className="text-lg font-extrabold">
+                                Booked Tests
+                              </h4>
+
+                              <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                {(patient.items ?? []).map((item) => (
+                                  <div
+                                    key={item.id}
+                                    className="relative rounded-2xl bg-[#f8fbff] p-4 pr-12"
+                                  >
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        deleteBillingItem(
+                                          item,
+                                          patient.patient_name
+                                        )
+                                      }
+                                      disabled={
+                                        deletingBillItemId === item.id
+                                      }
+                                      title="Delete this billed test"
+                                      className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#fff0f3] text-sm text-[#e71935] transition hover:bg-[#e71935] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                      <FaTrash />
+                                    </button>
+
+                                    <p className="font-extrabold">
+                                      {item.test_name}
+                                    </p>
+
+                                    <p className="mt-1 text-xs font-bold text-slate-400">
+                                      {item.category || "Test"}
+                                    </p>
+
+                                    <p className="mt-3 text-lg font-extrabold text-[#0754dc]">
+                                      {rupees(item.rate)}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="mt-5 grid gap-3 md:grid-cols-3">
+                              <SummaryBox
+                                label="Gross MRP"
+                                value={rupees(patient.gross_amount)}
+                              />
+
+                              <SummaryBox
+                                label="Discount"
+                                value={
+                                  Number(patient.discount_amount || 0) > 0
+                                    ? `-${rupees(patient.discount_amount)}`
+                                    : rupees(0)
+                                }
+                              />
+
+                              <SummaryBox
+                                label="Billed Price"
+                                value={rupees(patient.final_amount)}
+                                green
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {group.billsForDate.length === 0 && (
+                    <div className="rounded-3xl bg-[#f8fbff] p-8 text-center">
+                      <h3 className="text-2xl font-extrabold">
+                        No billing found for this date
+                      </h3>
+
+                      <p className="mt-2 text-slate-500">
+                        Select another date to view this client's billing.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {billingClientGroups.length === 0 && (
+              <div className="rounded-3xl bg-white p-10 text-center shadow-md">
+                <FaFileInvoiceDollar className="mx-auto text-6xl text-[#0754dc]" />
+
+                <h2 className="mt-5 text-3xl font-extrabold">
+                  No client bills found
+                </h2>
+
+                <p className="mt-3 text-slate-500">
+                  Bills generated from the Client Portal will appear here.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
       </section>
     </main>
   );
@@ -609,6 +1320,32 @@ function StatCard({
           {icon}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryBox({
+  label,
+  value,
+  green = false,
+}: {
+  label: string;
+  value: string;
+  green?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <p className="text-sm font-bold text-slate-500">
+        {label}
+      </p>
+
+      <p
+        className={`mt-1 text-xl font-extrabold ${
+          green ? "text-[#05a832]" : "text-[#07142f]"
+        }`}
+      >
+        {value}
+      </p>
     </div>
   );
 }

@@ -25,6 +25,11 @@ export async function POST(request: Request) {
     const productinfo = getValue(formData, "productinfo");
     const firstname = getValue(formData, "firstname");
     const email = getValue(formData, "email");
+    const udf1 = getValue(formData, "udf1");
+const udf2 = getValue(formData, "udf2");
+const udf3 = getValue(formData, "udf3");
+const udf4 = getValue(formData, "udf4");
+const udf5 = getValue(formData, "udf5");
     const receivedHash = getValue(formData, "hash");
     const mihpayid = getValue(formData, "mihpayid");
     const mode = getValue(formData, "mode");
@@ -45,9 +50,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const reverseHashString = additionalCharges
-      ? `${additionalCharges}|${payuSalt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payuKey}`
-      : `${payuSalt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payuKey}`;
+    const reverseHashString =
+  additionalCharges
+    ? `${additionalCharges}|${payuSalt}|${status}||||||${udf5}|${udf4}|${udf3}|${udf2}|${udf1}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payuKey}`
+    : `${payuSalt}|${status}||||||${udf5}|${udf4}|${udf3}|${udf2}|${udf1}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payuKey}`;
 
     const calculatedHash = makeHash(reverseHashString);
 
@@ -88,22 +94,28 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: membershipOrders, error: membershipOrderError } =
-      await supabaseAdmin
-        .from("cytocare_bookings")
-        .select("*")
-        .eq("checkout_group_key", txnid)
-        .or("order_type.eq.elite_membership,test_name.ilike.%elite membership%")
-        .limit(1);
+    
+const {
+  data: membershipOrder,
+  error: membershipOrderError,
+} = await supabaseAdmin
+  .from("cytocare_bookings")
+  .select("*")
+  .eq("checkout_group_key", txnid)
+  .eq("order_type", "elite_membership")
+  .maybeSingle();
 
-    if (membershipOrderError) {
-      return NextResponse.redirect(
-        `${siteUrl}/patient-dashboard?payment=membership-search-error`,
-        303
-      );
-    }
+if (membershipOrderError) {
+  console.error(
+    "Elite membership booking search failed:",
+    membershipOrderError
+  );
 
-    const membershipOrder = membershipOrders?.[0] || null;
+  return NextResponse.redirect(
+    `${siteUrl}/patient-dashboard?payment=membership-search-error`,
+    303
+  );
+}
 
     if (membershipOrder) {
       const membershipExpiresAt = new Date();
@@ -125,13 +137,73 @@ export async function POST(request: Request) {
 
       const profileEmail = membershipOrder.email || email;
 
-      const { data: profile, error: profileFindError } = await supabaseAdmin
-        .from("patient_profiles")
-        .select("id, email")
-        .eq("email", profileEmail)
-        .maybeSingle();
+     let profile:
+  | {
+      id: string;
+      email: string | null;
+    }
+  | null = null;
 
-      if (profileFindError || !profile?.id) {
+
+// FIRST CHOICE:
+// Exact logged-in Supabase user ID carried in udf1.
+
+if (udf1) {
+  const {
+    data: profileById,
+    error: profileByIdError,
+  } = await supabaseAdmin
+    .from("patient_profiles")
+    .select("id, email")
+    .eq("id", udf1)
+    .maybeSingle();
+
+  if (!profileByIdError && profileById) {
+    profile = profileById;
+  }
+}
+
+
+// FALLBACK:
+// Existing bookings/payments created before udf1 was added.
+
+if (!profile) {
+  const {
+    data: profileByEmail,
+    error: profileByEmailError,
+  } = await supabaseAdmin
+    .from("patient_profiles")
+    .select("id, email")
+    .ilike("email", profileEmail)
+    .maybeSingle();
+
+  if (
+    !profileByEmailError &&
+    profileByEmail
+  ) {
+    profile = profileByEmail;
+  }
+}
+
+
+if (!profile?.id) {
+  console.error(
+    "Elite membership profile not found",
+    {
+      txnid,
+      udf1,
+      profileEmail,
+      mihpayid,
+    }
+  );
+
+  return NextResponse.redirect(
+    `${siteUrl}/patient-dashboard?payment=profile-not-found`,
+    303
+  );
+}
+
+      if (!profile?.id) {
         return NextResponse.redirect(
           `${siteUrl}/patient-dashboard?payment=profile-not-found`,
           303
